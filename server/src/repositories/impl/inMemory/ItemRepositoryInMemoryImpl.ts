@@ -8,6 +8,10 @@ export class ItemRepositoryInMemoryImpl implements ItemRepository {
     return this.items.get(id) || null;
   }
 
+  public async findByISBN(ISBN: string): Promise<BookItem[]> {
+    return Array.from(this.items.values()).filter(item => item.ISBN == ISBN);
+  }
+
   public async save(item: BookItem): Promise<void> {
     this.items.set(item.ID, item);
   }

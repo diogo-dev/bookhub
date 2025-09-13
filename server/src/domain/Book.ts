@@ -22,6 +22,10 @@ class Book {
   public publishedAt: number;
   public createdAt: number;
   public items: BookItem[];
+
+  constructor() {
+    this.createdAt = Date.now();
+  }
 }
 
 export { Book };
