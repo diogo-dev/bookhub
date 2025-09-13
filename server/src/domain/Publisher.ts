@@ -6,9 +6,9 @@ class Publisher {
   public address: Address;
   public createdAt: number;
 
-  constructor() {
-    this.ID = crypto.randomUUID();
-    this.createdAt = Date.now();
+  constructor(ID?: string, createdAt?: number) {
+    this.ID = ID || crypto.randomUUID();
+    this.createdAt = createdAt || Date.now();
   }
 }
 

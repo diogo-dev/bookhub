@@ -9,6 +9,10 @@ class Address {
   public city: string;
   public state: string;
   public country: string;
+
+  constructor(ID?: string) {
+    this.ID = ID || crypto.randomUUID();
+  }
 }
 
 export { Address };
