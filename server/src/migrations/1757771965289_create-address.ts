@@ -8,8 +8,8 @@ export async function up({ context: client }: { context: Client }) {
       place_name VARCHAR(255) NOT NULL,
       street_name VARCHAR(255) NOT NULL,
       street_number INTEGER NOT NULL,
-      complement VARCHAR(255),
-      neighborhood VARCHAR(255),
+      complement VARCHAR(255) NOT NULL,
+      neighborhood VARCHAR(255) NOT NULL,
       city VARCHAR(255) NOT NULL,
       state VARCHAR(255) NOT NULL,
       country VARCHAR(255) NOT NULL
