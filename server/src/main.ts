@@ -2,7 +2,16 @@ import "dotenv/config";
 import z from "zod";
 import cors from "cors";
 import express, { Request, Response } from "express";
+import { client } from "./infra/pg/connection";
+
+import { Author } from "./domain/Author";
+import { Publisher } from "./domain/Publisher";
 import { Address } from "./domain/Address";
+import { Book } from "./domain/Book";
+import { BookItem } from "./domain/BookItem";
+import { DeweyCategory } from "./domain/DeweyCategory";
+import { Language } from "./domain/Language";
+
 import { AuthorRepositoryPostgresImpl } from "./repositories/impl/postgres/AuthorRepositoryPostgresImpl";
 import { PublisherRepositoryPostgresImpl } from "./repositories/impl/postgres/PublisherRepositoryPostgresImpl";
 import { AddressRepositoryPostgresImpl } from "./repositories/impl/postgres/AddressRepositoryPostgresImpl";
@@ -10,14 +19,6 @@ import { BookRepositoryPostgresImpl } from "./repositories/impl/postgres/BookRep
 import { ItemRepositoryPostgresImpl } from "./repositories/impl/postgres/ItemRepositoryPostgresImpl";
 import { CategoryRepositoryPostgresImpl } from "./repositories/impl/postgres/CategoryRepositoryPostgresImpl";
 import { LanguageRepositoryPostgresImpl } from "./repositories/impl/postgres/LanguageRepositoryPostgresImpl";
-import { client } from "./infra/pg/connection";
-import { Language } from "./domain/Language";
-import { Author } from "./domain/Author";
-import { Publisher } from "./domain/Publisher";
-import { DeweyCategory } from "./domain/DeweyCategory";
-import ca from "zod/v4/locales/ca.js";
-import { Book } from "./domain/Book";
-import { BookItem } from "./domain/BookItem";
 
 const app = express();
 app.use(express.json());

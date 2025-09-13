@@ -35,6 +35,11 @@ export class ItemRepositoryPostgresImpl implements ItemRepository {
     }
   }
 
+  public async findByISBN(ISBN: string): Promise<BookItem[]> {
+    const result = await this.client.query("SELECT * FROM book_item WHERE isbn = $1;", [ISBN]);
+    return result.rows.map(this.deserialize);
+  }
+
   private deserialize(record: BookItemRecord): BookItem {
     return new BookItem(record.isbn, record.id, record.created_at);
   }
