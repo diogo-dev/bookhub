@@ -349,10 +349,16 @@ class HttpError extends Error {
 app.use("/", (error: Error, request: Request, response: Response, next: Function) => {
   let code = 500;
   let message = "internal server error";
+  let body: Record<string, string> | undefined = undefined;
 
   if (error instanceof z.ZodError) {
     code = 400;
     message = "validation error";
+
+    body = {};
+    for (const issue of error.issues) {
+      body[issue.path.join(".")] = issue.message;
+    }
   }
 
   if (error instanceof HttpError) {
@@ -360,8 +366,7 @@ app.use("/", (error: Error, request: Request, response: Response, next: Function
     message = error.message;
   }
 
-  response.status(code).json({ message });
+  response.status(code).json({ message, body });
 });
-
 
 app.listen(4000, () => console.log("server is running"));
