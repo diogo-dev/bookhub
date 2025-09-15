@@ -159,10 +159,31 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         [book.ISBN, book.parentISBN, book.title, book.subtitle, book.description, book.category.ID, book.language.isoCode, book.edition, book.numberOfPages, book.numberOfVisits, book.publishedAt]
       );
     } else {
-      await this.client.query(
-        "INSERT INTO book (isbn, parent_isbn, title, subtitle, description, category_id, language_code, edition, number_of_pages, number_of_visits, published_at, created_at);",
-        [book.ISBN, book.parentISBN, book.title, book.subtitle, book.description, book.category.ID, book.language.isoCode, book.edition, book.numberOfPages, book.numberOfVisits, book.publishedAt, book.createdAt]
-      );
+      await this.client.query("BEGIN");
+      try {
+        await this.client.query(
+          "INSERT INTO book (isbn, parent_isbn, title, subtitle, description, category_id, language_code, edition, number_of_pages, number_of_visits, published_at, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);",
+          [book.ISBN, book.parentISBN, book.title, book.subtitle, book.description, book.category.ID, book.language.isoCode, book.edition, book.numberOfPages, book.numberOfVisits, book.publishedAt, book.createdAt]
+        );
+
+        const authorsPlaceholder = book.authors.map((_, index) => `($1, $${index + 2}::UUID)`).join(", ");
+        const publishersPlaceholder = book.publishers.map((_, index) => `($1, $${index + 2}::UUID)`).join(", ");
+
+        await this.client.query(`
+          INSERT INTO book_author (book_isbn, author_id) VALUES ${authorsPlaceholder};`,
+          [book.ISBN, ...book.authors.map(author => author.ID)]
+        );
+
+        await this.client.query(`
+          INSERT INTO book_publisher (book_isbn, publisher_id) VALUES ${publishersPlaceholder};`,
+          [book.ISBN, ...book.publishers.map(publisher => publisher.ID)]
+        );
+
+        await this.client.query("COMMIT");
+      } catch (error) {
+        await this.client.query("ROLLBACK");
+        throw error;
+      }
     }
   }
 
