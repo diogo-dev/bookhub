@@ -47,6 +47,8 @@ app.get("/addresses/:id", async (request: Request, response: Response) => {
 });
 
 app.post("/addresses", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
   const schema = z.object({
     postalCode: z.string().max(15),
     placeName: z.string(),
@@ -89,6 +91,8 @@ app.get("/languages/:iso_code", async (request: Request, response: Response) => 
 });
 
 app.post("/languages", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
   const schema = z.object({
     isoCode: z.string().min(2).max(35).regex(bcp47Pattern),
     name: z.string()
@@ -116,6 +120,8 @@ app.get("/authors/:id", async (request: Request, response: Response) => {
 });
 
 app.post("/authors", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
   const schema = z.object({
     name: z.string(),
     biography: z.string(),
@@ -147,6 +153,8 @@ app.get("/publishers/:id", async (request: Request, response: Response) => {
 });
 
 app.post("/publishers", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
   const schema = z.object({
     name: z.string(),
     addressID: z.uuid()
@@ -177,6 +185,8 @@ app.get("/categories/:id", async (request: Request, response: Response) => {
 });
 
 app.post("/categories", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
   const schema = z.object({
     parentID: z.uuid().optional(),
     decimal: z.coerce.number(),
@@ -213,6 +223,8 @@ app.get("/books/:isbn", async (request: Request, response: Response) => {
 });
 
 app.post("/books", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
   const schema = z.object({
     ISBN: z.string().max(13).regex(/^\d+$/),
     parentISBN: z.string().max(13).regex(/^\d+$/).optional(),
@@ -294,6 +306,8 @@ app.get("/books/:isbn/items", async (request: Request, response: Response) => {
 });
 
 app.post("/books/:isbn/items", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
   const schema = z.object({
     ISBN: z.string().max(13).regex(/^\d+$/),
     quantity: z.coerce.number().min(1)
