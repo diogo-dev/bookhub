@@ -5,7 +5,7 @@ import { Client } from "pg";
 export interface BookItemRecord {
   id: string;
   isbn: string;
-  created_at: number;
+  created_at: string;
 }
 
 export class ItemRepositoryPostgresImpl implements ItemRepository {
@@ -41,6 +41,6 @@ export class ItemRepositoryPostgresImpl implements ItemRepository {
   }
 
   private deserialize(record: BookItemRecord): BookItem {
-    return new BookItem(record.isbn, record.id, record.created_at);
+    return new BookItem(record.isbn, record.id, Number(record.created_at));
   }
 }

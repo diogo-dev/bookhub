@@ -8,7 +8,7 @@ export interface AuthorRecord {
   biography: string;
   birth_date: string;
   death_date: string | null;
-  created_at: number;
+  created_at: string;
 }
 
 export class AuthorRepositoryPostgresImpl implements AuthorRepository {
@@ -39,7 +39,7 @@ export class AuthorRepositoryPostgresImpl implements AuthorRepository {
   }
 
   private deserialize(record: AuthorRecord): Author {
-    const author = new Author(record.id, record.created_at);
+    const author = new Author(record.id, Number(record.created_at));
     author.name = record.name;
     author.biography = record.biography;
     author.birthDate = new Date(record.birth_date);

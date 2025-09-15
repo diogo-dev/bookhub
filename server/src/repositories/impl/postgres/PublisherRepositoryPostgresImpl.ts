@@ -8,7 +8,7 @@ export interface PublisherRecord {
   id: string;
   name: string;
   address: AddressRecord;
-  created_at: number;
+  created_at: string;
 }
 
 export class PublisherRepositoryPostgresImpl implements PublisherRepository {
@@ -60,7 +60,7 @@ export class PublisherRepositoryPostgresImpl implements PublisherRepository {
   }
 
   private deserialize(record: PublisherRecord): Publisher {
-    const publisher = new Publisher(record.id, record.created_at);
+    const publisher = new Publisher(record.id, Number(record.created_at));
     publisher.name = record.name;
     publisher.address = new Address(record.address.id);
     publisher.address.postalCode = record.address.postal_code;

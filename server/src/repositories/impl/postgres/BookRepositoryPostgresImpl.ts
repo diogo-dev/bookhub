@@ -23,7 +23,7 @@ interface BookRecord {
   number_of_pages: number;
   number_of_visits: number;
   published_at: number;
-  created_at: number;
+  created_at: string;
 
   authors: AuthorRecord[];
   publisher: PublisherRecord;
@@ -182,7 +182,7 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     book.category.decimal = Number(record.category.decimal);
     book.category.name = record.category.name;
     book.category.description = record.category.description;
-    book.category.createdAt = record.category.created_at;
+    book.category.createdAt = Number(record.category.created_at);
 
     book.title = record.title;
     book.subtitle = record.subtitle;
@@ -195,7 +195,7 @@ export class BookRepositoryPostgresImpl implements BookRepository {
       author.biography = authorRecord.biography;
       author.birthDate = new Date(authorRecord.birth_date);
       author.deathDate = authorRecord.death_date ? new Date(authorRecord.death_date) : null;
-      author.createdAt = authorRecord.created_at;
+      author.createdAt = Number(authorRecord.created_at);
       book.authors.push(author);
     }
 
@@ -223,14 +223,14 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     book.numberOfPages = record.number_of_pages;
     book.numberOfVisits = record.number_of_visits;
     book.publishedAt = record.published_at;
-    book.createdAt = record.created_at;
+    book.createdAt = Number(record.created_at);
 
     book.items = [];
     for (const itemRecord of record.items) {
       const bookItem = new BookItem(
         itemRecord.isbn,
         itemRecord.id,
-        itemRecord.created_at
+        Number(itemRecord.created_at)
       );
 
       book.items.push(bookItem);

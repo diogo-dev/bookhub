@@ -8,7 +8,7 @@ export interface DeweyCategoryRecord {
   decimal: string;
   name: string;
   description: string;
-  created_at: number;
+  created_at: string;
 }
 
 export class CategoryRepositoryPostgresImpl implements CategoryRepository {
@@ -39,7 +39,7 @@ export class CategoryRepositoryPostgresImpl implements CategoryRepository {
   }
 
   private deserialize(record: DeweyCategoryRecord): DeweyCategory {
-    const category = new DeweyCategory(record.id, record.created_at);
+    const category = new DeweyCategory(record.id, Number(record.created_at));
     category.parentID = record.parent_id;
     category.decimal = Number(record.decimal);
     category.name = record.name;
