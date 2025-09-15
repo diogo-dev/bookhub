@@ -371,6 +371,7 @@ app.use("/", (error: Error, request: Request, response: Response, next: Function
     message = error.message;
   }
 
+  console.log(error);
   response.status(code).json({ message, body });
 });
 
