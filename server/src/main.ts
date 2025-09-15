@@ -213,7 +213,7 @@ app.post("/categories", async (request: Request, response: Response) => {
 });
 
 app.get("/books/:isbn", async (request: Request, response: Response) => {
-  const bookISBN = z.string().max(13).regex(/^\d$/).parse(request.params.id);
+  const bookISBN = z.string().max(13).regex(/^\d+$/).parse(request.params.isbn);
 
   const book = await bookRepository.find(bookISBN);
 
