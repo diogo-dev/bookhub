@@ -333,6 +333,10 @@ app.post("/books/:isbn/items", async (request: Request, response: Response) => {
   response.status(201).json(items);
 });
 
+app.use((request: Request, response: Response) => {
+  response.status(404).json({ message: "not found" });
+});
+
 class HttpError extends Error {
   constructor(
     public statusCode: number,
