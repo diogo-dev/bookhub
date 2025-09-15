@@ -37,9 +37,13 @@ const categoryRepository = new CategoryRepositoryPostgresImpl(client);
 const languageRepository = new LanguageRepositoryPostgresImpl(client);
 
 app.get("/addresses/:id", async (request: Request, response: Response) => {
-  const addressID = z.uuid().parse(request.params.id);
+  const schema = z.object({
+    id: z.uuid()
+  });
 
-  const address = await addressRepository.find(addressID);
+  const params = schema.parse(request.params);
+
+  const address = await addressRepository.find(params.id);
 
   if (!address) throw new HttpError(404, "address not found");
 
@@ -81,9 +85,13 @@ app.post("/addresses", async (request: Request, response: Response) => {
 
 const bcp47Pattern = /^[a-zA-Z]{2,3}(-[a-zA-Z]{4})?(-[a-zA-Z]{2}|\d{3})?$/;
 app.get("/languages/:iso_code", async (request: Request, response: Response) => {
-  const isoCode = z.string().min(2).max(35).regex(bcp47Pattern).parse(request.params.iso_code);
+  const schema = z.object({
+    iso_code: z.string().min(2).max(35).regex(bcp47Pattern)
+  });
 
-  const language = await languageRepository.find(isoCode);
+  const params = schema.parse(request.params);
+
+  const language = await languageRepository.find(params.iso_code);
 
   if (!language) throw new HttpError(404, "language not found");
 
@@ -110,9 +118,13 @@ app.post("/languages", async (request: Request, response: Response) => {
 });
 
 app.get("/authors/:id", async (request: Request, response: Response) => {
-  const authorID = z.uuid().parse(request.params.id);
+  const schema = z.object({
+    id: z.uuid()
+  });
 
-  const author = await authorRepository.find(authorID);
+  const params = schema.parse(request.params);
+
+  const author = await authorRepository.find(params.id);
 
   if (!author) throw new HttpError(404, "author not found");
 
@@ -143,9 +155,13 @@ app.post("/authors", async (request: Request, response: Response) => {
 });
 
 app.get("/publishers/:id", async (request: Request, response: Response) => {
-  const publisherID = z.uuid().parse(request.params.id);
+  const schema = z.object({
+    id: z.uuid()
+  });
 
-  const publisher = await publisherRepository.find(publisherID);
+  const params = schema.parse(request.params);
+
+  const publisher = await publisherRepository.find(params.id);
 
   if (!publisher) throw new HttpError(404, "publisher not found");
 
@@ -175,9 +191,13 @@ app.post("/publishers", async (request: Request, response: Response) => {
 });
 
 app.get("/categories/:id", async (request: Request, response: Response) => {
-  const categoryID = z.uuid().parse(request.params.id);
+  const schema = z.object({
+    id: z.uuid()
+  });
 
-  const category = await categoryRepository.find(categoryID);
+  const params = schema.parse(request.params);
+
+  const category = await categoryRepository.find(params.id);
 
   if (!category) throw new HttpError(404, "category not found");
 
@@ -213,9 +233,13 @@ app.post("/categories", async (request: Request, response: Response) => {
 });
 
 app.get("/books/:isbn", async (request: Request, response: Response) => {
-  const bookISBN = z.string().max(13).regex(/^\d+$/).parse(request.params.isbn);
+  const schema = z.object({
+    isbn: z.string().max(13).regex(/^\d+$/)
+  });
 
-  const book = await bookRepository.find(bookISBN);
+  const params = schema.parse(request.params);
+
+  const book = await bookRepository.find(params.isbn);
 
   if (!book) throw new HttpError(404, "book not found");
 
@@ -302,9 +326,13 @@ app.post("/books", async (request: Request, response: Response) => {
 });
 
 app.get("/books/:isbn/items", async (request: Request, response: Response) => {
-  const ISBN = z.string().max(13).regex(/^\d+$/).parse(request.params.isbn);
+  const schema = z.object({
+    isbn: z.string().max(13).regex(/^\d+$/)
+  });
 
-  const items = await itemRepository.findByISBN(ISBN);
+  const params = schema.parse(request.params);
+
+  const items = await itemRepository.findByISBN(params.isbn);
   response.json(items);
 });
 
