@@ -126,7 +126,7 @@ app.post("/authors", async (request: Request, response: Response) => {
     name: z.string(),
     biography: z.string(),
     birthDate: z.coerce.date(),
-    deathDate: z.coerce.date(),
+    deathDate: z.coerce.date().optional(),
   });
 
   const params = schema.parse(request.body);
@@ -135,7 +135,7 @@ app.post("/authors", async (request: Request, response: Response) => {
   author.name = params.name;
   author.biography = params.biography;
   author.birthDate = params.birthDate;
-  author.deathDate = params.deathDate;
+  author.deathDate = params.deathDate || null;
 
   await authorRepository.save(author);
 

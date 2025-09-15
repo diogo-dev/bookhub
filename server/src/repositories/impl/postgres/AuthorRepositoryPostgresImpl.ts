@@ -7,7 +7,7 @@ export interface AuthorRecord {
   name: string;
   biography: string;
   birth_date: string;
-  death_date: string;
+  death_date: string | null;
   created_at: number;
 }
 
@@ -43,7 +43,7 @@ export class AuthorRepositoryPostgresImpl implements AuthorRepository {
     author.name = record.name;
     author.biography = record.biography;
     author.birthDate = new Date(record.birth_date);
-    author.deathDate = new Date(record.death_date);
+    author.deathDate = record.death_date ? new Date(record.death_date) : null;
     return author;
   }
 }

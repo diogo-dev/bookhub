@@ -4,7 +4,7 @@ class Author {
   public biography: string;
   // public photo: string;
   public birthDate: Date;
-  public deathDate: Date;
+  public deathDate: Date | null;
   public createdAt: number;
 
   constructor(ID?: string, createdAt?: number) {
