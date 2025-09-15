@@ -202,7 +202,7 @@ app.post("/categories", async (request: Request, response: Response) => {
   }
 
   const category = new DeweyCategory();
-  category.parentID = params.parentID || "";
+  category.parentID = params.parentID || null;
   category.decimal = params.decimal;
   category.name = params.name;
   category.description = params.description || "";

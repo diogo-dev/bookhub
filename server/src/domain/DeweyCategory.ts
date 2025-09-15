@@ -1,6 +1,6 @@
 class DeweyCategory {
   public ID: string;
-  public parentID: string;
+  public parentID: string | null;
   public decimal: number;
   public name: string;
   public description: string;
