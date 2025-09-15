@@ -279,7 +279,7 @@ app.post("/books", async (request: Request, response: Response) => {
 
   const book = new Book();
   book.ISBN = params.ISBN;
-  book.parentISBN = params.parentISBN || "";
+  book.parentISBN = params.parentISBN || null;
   book.category = category;
   book.title = params.title;
   book.subtitle = params.subtitle || "";

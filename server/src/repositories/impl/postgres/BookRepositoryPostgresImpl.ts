@@ -210,7 +210,7 @@ export class BookRepositoryPostgresImpl implements BookRepository {
       author.name = authorRecord.name;
       author.biography = authorRecord.biography;
       author.birthDate = new Date(authorRecord.birth_date);
-      author.deathDate = new Date(authorRecord.death_date);
+      author.deathDate = authorRecord.death_date ? new Date(authorRecord.death_date) : null;
       author.createdAt = authorRecord.created_at;
       book.authors.push(author);
     }

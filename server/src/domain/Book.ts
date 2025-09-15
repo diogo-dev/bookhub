@@ -6,7 +6,7 @@ import { Publisher } from "./Publisher";
 
 class Book {
   public ISBN: string;
-  public parentISBN: string;  // link to first book edition
+  public parentISBN: string | null;  // link to first book edition
   public category: DeweyCategory;
   // public cutterCode: string;
   public title: string;
