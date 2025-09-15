@@ -257,7 +257,7 @@ app.post("/books", async (request: Request, response: Response) => {
     subtitle: z.string().optional(),
     description: z.string().optional(),
     authorIDs: z.array(z.uuid()).min(1),
-    publisherIDs: z.array(z.uuid()).min(1),
+    publisherID: z.uuid(),
     edition: z.string().optional(),
     languageCode: z.string().min(2).max(35).regex(bcp47Pattern),
     numberOfPages: z.coerce.number().min(1),
@@ -277,11 +277,9 @@ app.post("/books", async (request: Request, response: Response) => {
   const category = await categoryRepository.find(params.categoryID);
   if (!category) throw new HttpError(400, "category not found");
 
-  const authorQueries: Promise<Author>[] = [];
-  const publisherQueries: Promise<Publisher>[] = [];
-
+  const queries: Promise<Author>[] = [];
   for (const authorID of params.authorIDs) {
-    authorQueries.push(
+    queries.push(
       authorRepository.find(authorID).then(author => {
         if (author) return author;
         else throw new HttpError(400, "author not found: " + authorID);
@@ -289,17 +287,10 @@ app.post("/books", async (request: Request, response: Response) => {
     );
   }
 
-  for (const publisherID of params.publisherIDs) {
-   publisherQueries.push(
-      publisherRepository.find(publisherID).then(publisher => {
-        if (publisher) return publisher;
-        else throw new HttpError(400, "publisher not found: " + publisherID);
-      })
-    );
-  }
+  const authors = await Promise.all(queries);
 
-  const authors = await Promise.all(authorQueries);
-  const publishers = await Promise.all(publisherQueries);
+  const publisher = await publisherRepository.find(params.publisherID);
+  if (!publisher) throw new HttpError(400, "publisher not found");
 
   const language = await languageRepository.find(params.languageCode);
   if (!language) throw new HttpError(400, "language not found");
@@ -312,7 +303,7 @@ app.post("/books", async (request: Request, response: Response) => {
   book.subtitle = params.subtitle || "";
   book.description = params.description || "";
   book.authors = authors;
-  book.publishers = publishers;
+  book.publisher = publisher;
   book.edition = params.edition || "";
   book.language = language;
   book.numberOfPages = params.numberOfPages;

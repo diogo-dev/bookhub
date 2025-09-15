@@ -25,8 +25,8 @@ interface BookRecord {
   published_at: number;
   created_at: number;
 
-  authors: AuthorRecord[]
-  publishers: PublisherRecord[]
+  authors: AuthorRecord[];
+  publisher: PublisherRecord;
   category: DeweyCategoryRecord;
   language: LanguageRecord;
   items: BookItemRecord[];
@@ -50,16 +50,38 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         b.created_at,
 
         COALESCE(authors.obj, '[]') AS authors,
-        COALESCE(publishers.obj, '[]') AS publishers,
         COALESCE(items.obj, '[]') AS items,
 
-        -- Language as JSON object
+        -- Publisher (one-to-many)
+        json_build_object(
+          'id', p.id,
+          'name', p.name,
+          'created_at', p.created_at,
+          'address', (
+            SELECT json_build_object(
+              'id', addr.id,
+              'postal_code', addr.postal_code,
+              'place_name', addr.place_name,
+              'street_name', addr.street_name,
+              'street_number', addr.street_number,
+              'complement', addr.complement,
+              'neighborhood', addr.neighborhood,
+              'city', addr.city,
+              'state', addr.state,
+              'country', addr.country
+            )
+            FROM address addr
+            WHERE addr.id = p.address_id
+          )
+        ) AS publisher,
+
+        -- Language (one-to-many)
         json_build_object(
           'iso_code', l.iso_code,
           'name', l.name
         ) AS language,
 
-        -- Category as JSON object
+        -- Category (one-to-many)
         json_build_object(
           'id', c.id,
           'parent_id', c.parent_id,
@@ -70,6 +92,10 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         ) AS category
 
       FROM book b
+
+      LEFT JOIN publisher p ON p.id = b.publisher_id
+      LEFT JOIN language l ON l.iso_code = b.language_code
+      LEFT JOIN dewey_category c ON c.id = b.category_id
 
       -- Authors (many-to-many)
       LEFT JOIN LATERAL (
@@ -88,36 +114,6 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         WHERE ba.book_isbn = b.isbn
       ) authors ON TRUE
 
-      -- Publishers (many-to-many) with nested address
-      LEFT JOIN LATERAL (
-        SELECT json_agg(
-          json_build_object(
-            'id', p.id,
-            'name', p.name,
-            'created_at', p.created_at,
-            'address', (
-              SELECT json_build_object(
-                'id', addr.id,
-                'postal_code', addr.postal_code,
-                'place_name', addr.place_name,
-                'street_name', addr.street_name,
-                'street_number', addr.street_number,
-                'complement', addr.complement,
-                'neighborhood', addr.neighborhood,
-                'city', addr.city,
-                'state', addr.state,
-                'country', addr.country
-              )
-              FROM address addr
-              WHERE addr.id = p.address_id
-            )
-          )
-        ) AS obj
-        FROM book_publisher bp
-        JOIN publisher p ON bp.publisher_id = p.id
-        WHERE bp.book_isbn = b.isbn
-      ) publishers ON TRUE
-
       -- Book items (one-to-many)
       LEFT JOIN LATERAL (
         SELECT json_agg(
@@ -130,12 +126,6 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         FROM book_item bi
         WHERE bi.isbn = b.isbn
       ) items ON TRUE
-
-      -- Language (one-to-one)
-      LEFT JOIN language l ON b.language_code = l.iso_code
-
-      -- Category (one-to-one)
-      LEFT JOIN dewey_category c ON b.category_id = c.id
 
       WHERE b.isbn = $1;`,
       [isbn]
@@ -155,28 +145,22 @@ export class BookRepositoryPostgresImpl implements BookRepository {
 
     if (recordExists) {
       await this.client.query(
-        "UPDATE book SET parent_isbn = $1, title = $2, subtitle = $3, description = $4, category_id = $5, language_code = $6, edition = $7, number_of_pages = $8, number_of_visits = $9, published_at = $10, WHERE isbn = $1;",
-        [book.ISBN, book.parentISBN, book.title, book.subtitle, book.description, book.category.ID, book.language.isoCode, book.edition, book.numberOfPages, book.numberOfVisits, book.publishedAt]
+        "UPDATE book SET parent_isbn = $2, title = $3, subtitle = $4, description = $5, publisher_id = $6, category_id = $7, language_code = $8, edition = $9, number_of_pages = $10, number_of_visits = $11, published_at = $12, WHERE isbn = $1;",
+        [book.ISBN, book.parentISBN, book.title, book.subtitle, book.description, book.publisher.ID, book.category.ID, book.language.isoCode, book.edition, book.numberOfPages, book.numberOfVisits, book.publishedAt]
       );
     } else {
       await this.client.query("BEGIN");
       try {
         await this.client.query(
-          "INSERT INTO book (isbn, parent_isbn, title, subtitle, description, category_id, language_code, edition, number_of_pages, number_of_visits, published_at, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);",
-          [book.ISBN, book.parentISBN, book.title, book.subtitle, book.description, book.category.ID, book.language.isoCode, book.edition, book.numberOfPages, book.numberOfVisits, book.publishedAt, book.createdAt]
+          "INSERT INTO book (isbn, parent_isbn, title, subtitle, description, publisher_id, category_id, language_code, edition, number_of_pages, number_of_visits, published_at, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
+          [book.ISBN, book.parentISBN, book.title, book.subtitle, book.description, book.publisher.ID, book.category.ID, book.language.isoCode, book.edition, book.numberOfPages, book.numberOfVisits, book.publishedAt, book.createdAt]
         );
 
         const authorsPlaceholder = book.authors.map((_, index) => `($1, $${index + 2}::UUID)`).join(", ");
-        const publishersPlaceholder = book.publishers.map((_, index) => `($1, $${index + 2}::UUID)`).join(", ");
 
         await this.client.query(`
           INSERT INTO book_author (book_isbn, author_id) VALUES ${authorsPlaceholder};`,
           [book.ISBN, ...book.authors.map(author => author.ID)]
-        );
-
-        await this.client.query(`
-          INSERT INTO book_publisher (book_isbn, publisher_id) VALUES ${publishersPlaceholder};`,
-          [book.ISBN, ...book.publishers.map(publisher => publisher.ID)]
         );
 
         await this.client.query("COMMIT");
@@ -215,26 +199,20 @@ export class BookRepositoryPostgresImpl implements BookRepository {
       book.authors.push(author);
     }
 
-    book.publishers = [];
-    for (const publisherRecord of record.publishers) {
-      const publisher = new Publisher(publisherRecord.id);
-      publisher.name = publisherRecord.name;
-      publisher.createdAt = publisherRecord.created_at;
-
-      publisher.address = new Address();
-      publisher.address.ID = publisherRecord.address.id;
-      publisher.address.postalCode = publisherRecord.address.postal_code;
-      publisher.address.placeName = publisherRecord.address.place_name;
-      publisher.address.streetName = publisherRecord.address.street_name;
-      publisher.address.streetNumber = publisherRecord.address.street_number;
-      publisher.address.complement = publisherRecord.address.complement;
-      publisher.address.neighborhood = publisherRecord.address.neighborhood;
-      publisher.address.city = publisherRecord.address.city;
-      publisher.address.state = publisherRecord.address.state;
-      publisher.address.country = publisherRecord.address.country;
-
-      book.publishers.push(publisher);
-    }
+    book.publisher = new Publisher(record.publisher.id);
+    book.publisher.name = record.publisher.name;
+    book.publisher.createdAt = Number(record.publisher.created_at);
+    book.publisher.address = new Address();
+    book.publisher.address.ID = record.publisher.address.id;
+    book.publisher.address.postalCode = record.publisher.address.postal_code;
+    book.publisher.address.placeName = record.publisher.address.place_name;
+    book.publisher.address.streetName = record.publisher.address.street_name;
+    book.publisher.address.streetNumber = record.publisher.address.street_number;
+    book.publisher.address.complement = record.publisher.address.complement;
+    book.publisher.address.neighborhood = record.publisher.address.neighborhood;
+    book.publisher.address.city = record.publisher.address.city;
+    book.publisher.address.state = record.publisher.address.state;
+    book.publisher.address.country = record.publisher.address.country;
 
     book.edition = record.edition;
 

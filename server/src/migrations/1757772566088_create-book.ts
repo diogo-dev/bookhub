@@ -46,6 +46,7 @@ export async function up({ context: client }: { context: Client }) {
       title VARCHAR(255) NOT NULL,
       subtitle VARCHAR(255),
       description TEXT NOT NULL,
+      publisher_id UUID,
       category_id UUID,
       language_code VARCHAR(35),
       edition VARCHAR(255) NOT NULL,
@@ -54,6 +55,7 @@ export async function up({ context: client }: { context: Client }) {
       published_at BIGINT NOT NULL,
       created_at BIGINT DEFAULT (EXTRACT (EPOCH FROM NOW())),
       FOREIGN KEY (parent_isbn) REFERENCES book(isbn) ON DELETE SET NULL,
+      FOREIGN KEY (publisher_id) REFERENCES publisher(id) ON DELETE SET NULL,
       FOREIGN KEY (category_id) REFERENCES dewey_category(id) ON DELETE SET NULL,
       FOREIGN KEY (language_code) REFERENCES language(iso_code) ON DELETE SET NULL
     );
@@ -76,20 +78,9 @@ export async function up({ context: client }: { context: Client }) {
       FOREIGN KEY (author_id) REFERENCES author(id) ON DELETE CASCADE
     );
   `);
-
-  await client.query(`
-    CREATE TABLE book_publisher (
-      book_isbn VARCHAR(13),
-      publisher_id UUID,
-      PRIMARY KEY (book_isbn, publisher_id),
-      FOREIGN KEY (book_isbn) REFERENCES book(isbn) ON DELETE CASCADE,
-      FOREIGN KEY (publisher_id) REFERENCES publisher(id) ON DELETE CASCADE
-    );
-  `);
 }
 
 export async function down({ context: client }: { context: Client }) {
-  await client.query("DROP TABLE book_publisher;");
   await client.query("DROP TABLE book_author;");
   await client.query("DROP TABLE book_item;");
   await client.query("DROP TABLE book;");

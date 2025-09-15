@@ -14,7 +14,7 @@ class Book {
   public description: string;
   public authors: Author[];
   // public photo: string;
-  public publishers: Publisher[];
+  public publisher: Publisher;
   public edition: string;
   public language: Language;
   public numberOfPages: number;
