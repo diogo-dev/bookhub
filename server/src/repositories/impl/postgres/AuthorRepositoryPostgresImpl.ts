@@ -25,15 +25,17 @@ export class AuthorRepositoryPostgresImpl implements AuthorRepository {
     const result = await this.client.query("SELECT * FROM author WHERE id = $1;", [author.ID]);
     const recordExists = result.rows.length > 0;
 
+    const dateFormat = (date: Date | null) => date ? date.toISOString().slice(0, 10) : null;
+
     if (recordExists) {
       await this.client.query(
         "UPDATE author SET name = $2, biography = $3, birth_date = $4, death_date = $5 WHERE id = $1;",
-        [author.ID, author.name, author.biography, author.birthDate, author.deathDate]
+        [author.ID, author.name, author.biography, dateFormat(author.birthDate), dateFormat(author.deathDate)]
       );
     } else {
       await this.client.query(
         "INSERT INTO author (id, name, biography, birth_date, death_date, created_at) VALUES ($1, $2, $3, $4, $5, $6);",
-        [author.ID, author.name, author.biography, author.birthDate, author.deathDate, author.createdAt]
+        [author.ID, author.name, author.biography, dateFormat(author.birthDate), dateFormat(author.deathDate), author.createdAt]
       );
     }
   }
