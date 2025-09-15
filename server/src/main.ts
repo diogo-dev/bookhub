@@ -328,26 +328,26 @@ app.get("/books/:isbn/items", async (request: Request, response: Response) => {
 });
 
 app.post("/books/:isbn/items", async (request: Request, response: Response) => {
-  if (!request.body) throw new HttpError(400, "body is required");
+  const pathSchema = z.object({ isbn: z.string().max(13).regex(/^\d+$/) });
+  const querySchema = z.object({ n: z.coerce.number().min(1).default(1) });
 
-  const schema = z.object({
-    ISBN: z.string().max(13).regex(/^\d+$/),
-    quantity: z.coerce.number().min(1)
-  });
+  const pathParams = pathSchema.parse(request.params);
+  const queryParams = querySchema.parse(request.query);
 
-  const params = schema.parse(request.body);
-
-  const book = await bookRepository.find(params.ISBN);
+  const book = await bookRepository.find(pathParams.isbn);
   if (!book) throw new HttpError(400, "book not found");
 
-  const queries: Promise<any>[] = [];
+  const queries: Promise<void>[] = [];
+  const items: BookItem[] = [];
 
-  for (let i = 0; i < params.quantity; i++) {
-    const item = new BookItem(params.ISBN);
+  for (let i = 0; i < queryParams.n; i++) {
+    const item = new BookItem(pathParams.isbn);
+    items.push(item);
+
     queries.push(itemRepository.save(item));
   }
 
-  const items = await Promise.all(queries);
+  await Promise.all(queries);
 
   response.status(201).json(items);
 });
