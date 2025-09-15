@@ -15,24 +15,24 @@ export class CategoryRepositoryPostgresImpl implements CategoryRepository {
   constructor(private client: Client) {}
 
   public async find(id: string): Promise<DeweyCategory | null> {
-    const result = await this.client.query("SELECT * FROM category WHERE id = $1;", [id]);
+    const result = await this.client.query("SELECT * FROM dewey_category WHERE id = $1;", [id]);
 
     if (result.rows.length == 0) return null;
     else return this.deserialize(result.rows[0]);
   }
 
   public async save(category: DeweyCategory): Promise<void> {
-    const result = await this.client.query("SELECT * FROM category WHERE id = $1;", [category.ID]);
+    const result = await this.client.query("SELECT * FROM dewey_category WHERE id = $1;", [category.ID]);
     const recordExists = result.rows.length > 0;
 
     if (recordExists) {
       await this.client.query(
-        "UPDATE category SET parent_id = $2, decimal = $3, name = $4, description = $5 WHERE id = $1;",
+        "UPDATE dewey_category SET parent_id = $2, decimal = $3, name = $4, description = $5 WHERE id = $1;",
         [category.ID, category.parentID, category.decimal, category.name, category.description]
       );
     } else {
       await this.client.query(
-        "INSERT INTO category (id, parent_id, decimal, name, description, created_at) VALUES ($1, $2, $3, $4, $5, $6);",
+        "INSERT INTO dewey_category (id, parent_id, decimal, name, description, created_at) VALUES ($1, $2, $3, $4, $5, $6);",
         [category.ID, category.parentID, category.decimal, category.name, category.description, category.createdAt]
       );
     }
