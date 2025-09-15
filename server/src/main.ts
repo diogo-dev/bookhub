@@ -351,6 +351,11 @@ app.use("/", (error: Error, request: Request, response: Response, next: Function
   let message = "internal server error";
   let body: Record<string, string> | undefined = undefined;
 
+  if (error instanceof SyntaxError && 'body' in error) {
+    code = 400;
+    message = "invalid JSON format in request body";
+  }
+
   if (error instanceof z.ZodError) {
     code = 400;
     message = "validation error";
