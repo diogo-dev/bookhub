@@ -49,11 +49,9 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         b.published_at,
         b.created_at,
 
-        -- Authors as JSON array
         COALESCE(authors.obj, '[]') AS authors,
-
-        -- Publishers as JSON array with nested address
         COALESCE(publishers.obj, '[]') AS publishers,
+        COALESCE(items.obj, '[]') AS items,
 
         -- Language as JSON object
         json_build_object(
@@ -69,15 +67,11 @@ export class BookRepositoryPostgresImpl implements BookRepository {
           'name', c.name,
           'description', c.description,
           'created_at', c.created_at
-        ) AS category,
-
-        -- Book items as JSON array
-        COALESCE(items.obj, '[]') AS items
+        ) AS category
 
       FROM book b
 
       -- Authors (many-to-many)
-      LEFT JOIN book_author ba ON b.isbn = ba.book_isbn
       LEFT JOIN LATERAL (
         SELECT json_agg(
           json_build_object(
@@ -89,12 +83,12 @@ export class BookRepositoryPostgresImpl implements BookRepository {
             'created_at', a.created_at
           )
         ) AS obj
-        FROM author a
-        WHERE a.id = ba.author_id
+        FROM book_author ba
+        JOIN author a ON ba.author_id = a.id
+        WHERE ba.book_isbn = b.isbn
       ) authors ON TRUE
 
       -- Publishers (many-to-many) with nested address
-      LEFT JOIN book_publisher bp ON b.isbn = bp.book_isbn
       LEFT JOIN LATERAL (
         SELECT json_agg(
           json_build_object(
@@ -119,15 +113,10 @@ export class BookRepositoryPostgresImpl implements BookRepository {
             )
           )
         ) AS obj
-        FROM publisher p
-        WHERE p.id = bp.publisher_id
+        FROM book_publisher bp
+        JOIN publisher p ON bp.publisher_id = p.id
+        WHERE bp.book_isbn = b.isbn
       ) publishers ON TRUE
-
-      -- Language (one-to-one)
-      LEFT JOIN language l ON b.language_code = l.code
-
-      -- Category (one-to-one)
-      LEFT JOIN category c ON b.category_id = c.id
 
       -- Book items (one-to-many)
       LEFT JOIN LATERAL (
@@ -138,9 +127,15 @@ export class BookRepositoryPostgresImpl implements BookRepository {
             'created_at', bi.created_at
           )
         ) AS obj
-        FROM book_items bi
-        WHERE bi.book_id = b.id
+        FROM book_item bi
+        WHERE bi.isbn = b.isbn
       ) items ON TRUE
+
+      -- Language (one-to-one)
+      LEFT JOIN language l ON b.language_code = l.iso_code
+
+      -- Category (one-to-one)
+      LEFT JOIN dewey_category c ON b.category_id = c.id
 
       WHERE b.isbn = $1;`,
       [isbn]
