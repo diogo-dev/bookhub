@@ -1,7 +1,10 @@
-import { Roboto } from "next/font/google";
 import type { Metadata } from "next";
+import { Roboto } from "next/font/google";
+import { Header } from "./_components/Header";
+import { Footer } from "./_components/Footer";
 
 import "./globals.css";
+import styles from "./layout.module.css";
 
 export const metadata: Metadata = {
   title: "BookHub",
@@ -15,8 +18,10 @@ const roboto = Roboto({
 export default function RootLayout(props: { children: React.ReactNode; }) {
   return (
     <html lang="en">
-      <body className={roboto.className}>
-        {props.children}
+      <body className={[roboto.className, styles.container].join(" ")}>
+        <Header />
+        <main>{props.children}</main>
+        <Footer />
       </body>
     </html>
   );
