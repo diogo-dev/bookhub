@@ -1,0 +1,72 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+.inputContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 30rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid black;
+  border-radius: 0.5rem;
+}
+
+.inputContainer svg {
+  flex-shrink: 0;
+}
+
+.inputContainer input {
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.inputContainer input:focus {
+  outline: none;
+}
+
+.inputContainer:has(input:focus) {
+  box-shadow:
+    0 0 0 1px black,
+    0 0 0.25rem rgba(0, 0, 0, 0.2);
+}
+
+.container section {
+  width: 100%;
+}
+
+.container section h1 {
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.container section ul {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.container section li {
+  list-style: none;
+}
+
+.container section a {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: black
+}
+
+.container section .cover {
+  width: 15rem;
+  height: 17.5rem;
+  border: 2px dashed black
+}

@@ -1,0 +1,37 @@
+.container {
+  position: relative;
+}
+
+.container button {
+  position: absolute;
+  cursor: pointer;
+}
+
+.container button:disabled {
+  display: none;
+}
+
+.container button:first-of-type {
+  left: 0%;
+  top: 50%;
+  translate: -100% calc(-50% - 1rem);
+}
+
+.container button:last-of-type {
+  left: 100%;
+  top: 50%;
+  translate: 0% calc(-50% - 1rem);
+}
+
+.container button svg {
+  display: block;
+}
+
+.contentBox {
+  overflow-x: hidden;
+}
+
+.content {
+  position: relative;
+  transition: left 2s ease;
+}
