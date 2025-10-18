@@ -141,6 +141,30 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     else return this.deserialize(result.rows[0]);
   }
 
+  public async findByText(query: string, limit = 10): Promise<Book[]> {
+    const textSearch = await this.client.query(`
+      SELECT * FROM book
+      WHERE search_vector @@ plainto_tsquery('simple', unaccent($1))
+      ORDER BY ts_rank(search_vector, plainto_tsquery('simple', unaccent($1))) DESC
+      LIMIT $2;`,
+      [query, limit]
+    );
+
+    if (textSearch.rows.length > 0) {
+      return textSearch.rows.map((row) => this.deserialize(row));
+    } else {
+      const fuzzySearch = await this.client.query(`
+        SELECT * FROM book
+        WHERE similarity(title, $1) > 0.3
+        ORDER BY similarity(title, $1) DESC
+        LIMIT $2;`,
+        [query, limit]
+      );
+
+      return fuzzySearch.rows.map((row) => this.deserialize(row));
+    }
+  }
+
   public async save(book: Book): Promise<void> {
     const result = await this.query(book.ISBN);
     const recordExists = result.rows.length > 0;
