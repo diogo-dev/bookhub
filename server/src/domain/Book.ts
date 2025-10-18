@@ -24,6 +24,7 @@ class Book {
 
   constructor() {
     this.createdAt = Date.now();
+    this.numberOfVisits = 0;
   }
 }
 
