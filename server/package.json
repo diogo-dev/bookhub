@@ -5,7 +5,8 @@
     "dev": "ts-node -r tsconfig-paths/register src/main.ts",
     "prod": "tsc && node dist/main.js",
     "migrate": "ts-node src/infra/umzug/index.ts",
-    "migrate:revert": "ts-node src/infra/umzug/index.ts down --to 0"
+    "migrate:up": "ts-node src/infra/umzug/index.ts up",
+    "migrate:down": "ts-node src/infra/umzug/index.ts down --to 0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -13,7 +13,7 @@ Install the following techs
 
 1. Clone Github repository
 2. Install packages `npm i` for each directory `client/` and `server/`
-3. On server, run migrations `npm run migrate up`
+3. On server, run migrations `npm run migrate:up`
     1. To revert migrations, run `npm run migrate:down`
 4. Execute client and server on development `npm run dev`
 
