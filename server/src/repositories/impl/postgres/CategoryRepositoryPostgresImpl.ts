@@ -7,7 +7,6 @@ export interface DeweyCategoryRecord {
   parent_id: string;
   decimal: string;
   name: string;
-  description: string;
   created_at: string;
 }
 
@@ -48,13 +47,13 @@ export class CategoryRepositoryPostgresImpl implements CategoryRepository {
 
     if (recordExists) {
       await this.client.query(
-        "UPDATE dewey_category SET parent_id = $2, decimal = $3, name = $4, description = $5 WHERE id = $1;",
-        [category.ID, category.parentID, category.decimal, category.name, category.description]
+        "UPDATE dewey_category SET parent_id = $2, decimal = $3, name = $4, WHERE id = $1;",
+        [category.ID, category.parentID, category.decimal, category.name]
       );
     } else {
       await this.client.query(
-        "INSERT INTO dewey_category (id, parent_id, decimal, name, description, created_at) VALUES ($1, $2, $3, $4, $5, $6);",
-        [category.ID, category.parentID, category.decimal, category.name, category.description, category.createdAt]
+        "INSERT INTO dewey_category (id, parent_id, decimal, name, created_at) VALUES ($1, $2, $3, $4, $5);",
+        [category.ID, category.parentID, category.decimal, category.name, category.createdAt]
       );
     }
   }
@@ -75,7 +74,6 @@ export class CategoryRepositoryPostgresImpl implements CategoryRepository {
     category.parentID = record.parent_id;
     category.decimal = record.decimal;
     category.name = record.name;
-    category.description = record.description;
     return category;
   }
 }

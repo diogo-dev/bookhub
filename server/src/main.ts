@@ -150,7 +150,6 @@ app.post("/categories", async (request: Request, response: Response) => {
     parentID: z.uuid().optional(),
     decimal: z.string(),
     name: z.string(),
-    description: z.string().optional()
   });
 
   const params = schema.parse(request.body);
@@ -164,7 +163,6 @@ app.post("/categories", async (request: Request, response: Response) => {
   category.parentID = params.parentID || null;
   category.decimal = params.decimal;
   category.name = params.name;
-  category.description = params.description || "";
 
   await categoryRepository.save(category);
 

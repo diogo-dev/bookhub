@@ -76,7 +76,6 @@ export class BookRepositoryPostgresImpl implements BookRepository {
           'parent_id', c.parent_id,
           'decimal', c.decimal,
           'name', c.name,
-          'description', c.description,
           'created_at', c.created_at
         ) AS category
 
@@ -233,7 +232,6 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     book.category.parentID = record.category.parent_id;
     book.category.decimal = record.category.decimal;
     book.category.name = record.category.name;
-    book.category.description = record.category.description;
     book.category.createdAt = Number(record.category.created_at);
 
     book.genres = [];
