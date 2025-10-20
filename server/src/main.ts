@@ -148,7 +148,7 @@ app.post("/categories", async (request: Request, response: Response) => {
 
   const schema = z.object({
     parentID: z.uuid().optional(),
-    decimal: z.coerce.number(),
+    decimal: z.string(),
     name: z.string(),
     description: z.string().optional()
   });

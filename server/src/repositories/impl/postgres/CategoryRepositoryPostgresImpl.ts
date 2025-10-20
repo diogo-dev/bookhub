@@ -73,7 +73,7 @@ export class CategoryRepositoryPostgresImpl implements CategoryRepository {
   private deserialize(record: DeweyCategoryRecord): DeweyCategory {
     const category = new DeweyCategory(record.id, Number(record.created_at));
     category.parentID = record.parent_id;
-    category.decimal = Number(record.decimal);
+    category.decimal = record.decimal;
     category.name = record.name;
     category.description = record.description;
     return category;

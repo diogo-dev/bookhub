@@ -231,7 +231,7 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     book.category = new DeweyCategory();
     book.category.ID = record.category.id;
     book.category.parentID = record.category.parent_id;
-    book.category.decimal = Number(record.category.decimal);
+    book.category.decimal = record.category.decimal;
     book.category.name = record.category.name;
     book.category.description = record.category.description;
     book.category.createdAt = Number(record.category.created_at);
