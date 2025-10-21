@@ -2,8 +2,10 @@ import "dotenv/config";
 import z from "zod";
 import cors from "cors";
 import express, { Request, Response } from "express";
+import bcrypt from "bcrypt";
 import { client } from "./infra/pg/connection";
 
+import { Account } from "./domain/Account";
 import { Author } from "./domain/Author";
 import { Publisher } from "./domain/Publisher";
 import { Book } from "./domain/Book";
@@ -11,6 +13,7 @@ import { BookItem } from "./domain/BookItem";
 import { DeweyCategory } from "./domain/DeweyCategory";
 import { Language } from "./domain/Language";
 
+import { AccountRepositoryPostgresImpl } from "./repositories/impl/postgres/AccountRepositoryPostgresImpl";
 import { AuthorRepositoryPostgresImpl } from "./repositories/impl/postgres/AuthorRepositoryPostgresImpl";
 import { PublisherRepositoryPostgresImpl } from "./repositories/impl/postgres/PublisherRepositoryPostgresImpl";
 import { BookRepositoryPostgresImpl } from "./repositories/impl/postgres/BookRepositoryPostgresImpl";
@@ -26,12 +29,35 @@ app.get("/", (request: Request, response: Response) => {
   response.json({ message: "root endpoint" });
 });
 
+const accountRepository = new AccountRepositoryPostgresImpl(client);
 const authorRepository = new AuthorRepositoryPostgresImpl(client);
 const publisherRepository = new PublisherRepositoryPostgresImpl(client);
 const bookRepository = new BookRepositoryPostgresImpl(client);
 const itemRepository = new ItemRepositoryPostgresImpl(client);
 const categoryRepository = new CategoryRepositoryPostgresImpl(client);
 const languageRepository = new LanguageRepositoryPostgresImpl(client);
+
+app.post("/accounts/register", async (request: Request, response: Response) => {
+  const schema = z.object({
+    email: z.email(),
+    password: z.string()
+  });
+
+  const params = schema.parse(request.params);
+
+  const accountExists = await accountRepository.findByEmail(params.email);
+  if (accountExists) throw new HttpError(400, "email already used");
+
+  const account = new Account();
+  account.email = params.email;
+
+  const saltRounds = 10;
+  account.password_hash = await bcrypt.hash(params.password, saltRounds);
+
+  await accountRepository.save(account);
+
+  response.status(201).json(account);
+})
 
 const bcp47Pattern = /^[a-zA-Z]{2,3}(-[a-zA-Z]{4})?(-[a-zA-Z]{2}|\d{3})?$/;
 app.get("/languages/:iso_code", async (request: Request, response: Response) => {
