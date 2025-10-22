@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { Umzug } from "umzug";
 import { Client } from "pg";
 
