@@ -10,6 +10,8 @@ import { Book } from "./domain/Book";
 import { BookItem } from "./domain/BookItem";
 import { DeweyCategory } from "./domain/DeweyCategory";
 import { Language } from "./domain/Language";
+import { Permission } from "./domain/Permission";
+import { Role } from "./domain/Role";
 
 import { AuthorRepositoryPostgresImpl } from "./repositories/impl/postgres/AuthorRepositoryPostgresImpl";
 import { PublisherRepositoryPostgresImpl } from "./repositories/impl/postgres/PublisherRepositoryPostgresImpl";
@@ -17,6 +19,11 @@ import { BookRepositoryPostgresImpl } from "./repositories/impl/postgres/BookRep
 import { ItemRepositoryPostgresImpl } from "./repositories/impl/postgres/ItemRepositoryPostgresImpl";
 import { CategoryRepositoryPostgresImpl } from "./repositories/impl/postgres/CategoryRepositoryPostgresImpl";
 import { LanguageRepositoryPostgresImpl } from "./repositories/impl/postgres/LanguageRepositoryPostgresImpl";
+import { PermissionRepositoryPostgresImpl } from "./repositories/impl/postgres/PermissionRepositoryPostgresImpl";
+import { RoleRepositoryPostgresImpl } from "./repositories/impl/postgres/RoleRepositoryPostgresImpl";
+import { UsersRepositoryPosgresImpl } from "./repositories/impl/postgres/UsersRepositoryPosgresImpl";
+
+import { AuthService } from "./auth/auth.service";
 
 const app = express();
 app.use(express.json());
@@ -32,6 +39,153 @@ const bookRepository = new BookRepositoryPostgresImpl(client);
 const itemRepository = new ItemRepositoryPostgresImpl(client);
 const categoryRepository = new CategoryRepositoryPostgresImpl(client);
 const languageRepository = new LanguageRepositoryPostgresImpl(client);
+const roleRepository = new RoleRepositoryPostgresImpl(client);
+const permissionRepository = new PermissionRepositoryPostgresImpl(client);
+const usersRepository = new UsersRepositoryPosgresImpl(client);
+
+const authService = new AuthService(usersRepository, roleRepository);
+
+app.post("/auth/login", async (req: Request, res: Response) => {
+  try {
+    const schema = z.object({
+      email: z.string().email(),
+      password: z.string()
+    });
+    
+    const params = schema.parse(req.body);
+
+    const { email, password } = params;
+
+    const result = await authService.login({ email, password });
+
+    return res.status(200).json({
+      message: "Login realizado com sucesso!",
+      token: result.token,
+      user: result.user,
+    });
+  } catch (error: any) {
+    return res.status(401).json({ message: error.message || "Falha ao realizar login." });
+  }
+});
+
+app.post("/auth/register", async (req: Request, res: Response) => {
+  try {
+    const schema = z.object({
+      name: z.string().min(1),
+      email: z.string().email(),
+      cpf: z.string().min(11).max(14),
+      password: z.string(),
+      roleName: z.string().optional()
+    });
+
+    const params = schema.parse(req.body);
+
+    const { name, email, cpf, password, roleName } = params;
+
+    const result = await authService.register({ name, email, cpf, password, roleName });
+
+    return res.status(201).json({
+      message: "Usuário registrado com sucesso!",
+      token: result.token,
+      user: result.user,
+    });
+  } catch (error: any) {
+    return res.status(400).json({ 
+      message: error.message || "Erro ao registrar usuário." 
+    });
+  }
+});
+
+app.get("/users:id", async (request: Request, response: Response) => {
+ const schema = z.object({
+    id: z.uuid()
+  });
+
+  const params = schema.parse(request.params);
+
+  const user = await usersRepository.findById(params.id);
+
+  if (!user) throw new HttpError(404, "user not found");
+
+  response.json(user);
+})
+
+app.get("/permissions/:id", async (request: Request, response: Response) => {
+ const schema = z.object({
+    id: z.uuid()
+  });
+
+  const params = schema.parse(request.params);
+
+  const user = await permissionRepository.find(params.id);
+
+  if (!user) throw new HttpError(404, "permission not found");
+
+  response.json(user);
+})
+
+app.post("/permissions", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
+  const schema = z.object({ name: z.string() });
+
+  const params = schema.parse(request.body);
+
+  const permission = await permissionRepository.findByName(params.name);
+  if (permission) throw new HttpError(400, "permission name already registered");
+
+  const newPermission = new Permission(params.name);
+
+  await permissionRepository.save(newPermission);
+
+  response.status(201).json(newPermission);
+});
+
+app.get("/roles/:id", async (request: Request, response: Response) => {
+ const schema = z.object({
+    id: z.uuid()
+  });
+
+  const params = schema.parse(request.params);
+
+  const user = await roleRepository.find(params.id);
+
+  if (!user) throw new HttpError(404, "permission not found");
+
+  response.json(user);
+})
+
+app.post("/roles", async (request: Request, response: Response) => {
+  if (!request.body) throw new HttpError(400, "body is required");
+
+  const schema = z.object({
+    name: z.string(),
+    permissionNames: z.array(z.string()).optional()
+  });
+
+  const params = schema.parse(request.body);
+
+  const existingRole = await roleRepository.getRoleByName(params.name);
+  if (existingRole) throw new HttpError(400, "role name already registered");
+
+  let permissions: Permission[] = [];
+  if (params.permissionNames && params.permissionNames.length > 0) {
+    permissions = await Promise.all(
+      params.permissionNames.map(async (permName) => {
+        const permission = await permissionRepository.findByName(permName);
+        if (!permission) throw new HttpError(404, `Permission '${permName}' not found`);
+        return permission;
+      })
+    );
+  }
+
+  const newRole = new Role(params.name, permissions);
+
+  await roleRepository.save(newRole);
+
+  response.status(201).json(newRole);
+});
+
 
 const bcp47Pattern = /^[a-zA-Z]{2,3}(-[a-zA-Z]{4})?(-[a-zA-Z]{2}|\d{3})?$/;
 app.get("/languages/:iso_code", async (request: Request, response: Response) => {
