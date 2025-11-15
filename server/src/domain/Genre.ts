@@ -1,9 +1,18 @@
 class Genre {
-  public ID: string;
-  public name: string;
+  private _name: string;
+  private _displayName: string;
 
-  constructor(ID?: string) {
-    this.ID = ID || crypto.randomUUID();
+  public get name(): string {
+    return this._name;
+  }
+
+  public get displayName(): string {
+    return this._displayName;
+  }
+
+  public set displayName(value: string) {
+    this._displayName = value.replaceAll(/[^\w\s]/g, "");
+    this._name = this._displayName.toLowerCase().trim();
   }
 }
 
