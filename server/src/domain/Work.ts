@@ -2,7 +2,7 @@ import { Author } from "./Author";
 import { Book } from "./Book";
 
 class Work {
-  public id: string;
+  public ID: string;
   public title: string;
   public subtitle: string;
   public description: string;
@@ -10,8 +10,8 @@ class Work {
   public editions: Book[];
   public createdAt: number;
 
-  constructor() {
-    this.id = crypto.randomUUID();
+  constructor(ID?: string) {
+    this.ID = ID || crypto.randomUUID();
     this.createdAt = Date.now();
   }
 }
