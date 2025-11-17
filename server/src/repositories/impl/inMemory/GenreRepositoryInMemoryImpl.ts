@@ -9,6 +9,6 @@ export class GenreRepositoryInMemoryImpl implements GenreRepository {
   }
 
   public async save(genre: Genre): Promise<void> {
-    this.genres.set(genre.id, genre);
+    this.genres.set(genre.name, genre);
   }
 }

@@ -89,12 +89,12 @@ export class BookRepositoryPostgresImpl implements BookRepository {
       LEFT JOIN LATERAL (
         SELECT json_agg(
           json_build_object(
-            'id', g.id,
-            'name', g.name
+            'name', g.name,
+            'display_name', g.display_name
           )
         ) AS obj
         FROM book_genre bg
-        JOIN genre g ON bg.genre_id = g.id
+        JOIN genre g ON bg.genre = g.name
         WHERE bg.book_isbn = b.isbn
       ) genres ON TRUE
 
@@ -170,11 +170,11 @@ export class BookRepositoryPostgresImpl implements BookRepository {
 
     try {
       await this.client.query("BEGIN;");
-      const genreIDs = book.genres.map((genre) => genre.ID);
+      const genres = book.genres.map((genre) => genre.name);
       const authorIDs = book.authors.map((author) => author.ID);
 
       if (recordExists) {
-        const insertedGenreIDs = genreIDs.map((_, index) => "$" + (index + 2)).join(",");
+        const insertedGenres = genres.map((_, index) => "$" + (index + 2)).join(",");
         const insertedAuthorIDs = authorIDs.map((_, index) => "$" + (index + 2)).join(",");
 
         await Promise.all([
@@ -211,8 +211,8 @@ export class BookRepositoryPostgresImpl implements BookRepository {
           ),
 
           this.client.query(
-            `DELETE FROM book_genre WHERE book_isbn = $1 AND genre_id NOT IN (${insertedGenreIDs});`,
-            [book.ISBN, ...genreIDs]
+            `DELETE FROM book_genre WHERE book_isbn = $1 AND genre_id NOT IN (${insertedGenres});`,
+            [book.ISBN, ...genres]
           ),
 
           this.client.query(
@@ -257,13 +257,13 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         );
       }
 
-      const genreInsertions = genreIDs.map((_, index) => `($1, $${index + 2}::UUID)`).join(", ");
+      const genreInsertions = genres.map((_, index) => `($1, $${index + 2}::UUID)`).join(", ");
       const authorInsertions = authorIDs.map((_, index) => `($1, $${index + 2}::UUID)`).join(", ");
 
       await Promise.all([
         this.client.query(`
-          INSERT INTO book_genre (book_isbn, genre_id) VALUES ${genreInsertions} ON CONFLICT DO NOTHING;`,
-          [book.ISBN, ...genreIDs]
+          INSERT INTO book_genre (book_isbn, genre) VALUES ${genreInsertions} ON CONFLICT DO NOTHING;`,
+          [book.ISBN, ...genres]
         ),
 
         this.client.query(`
@@ -297,8 +297,8 @@ export class BookRepositoryPostgresImpl implements BookRepository {
 
     book.genres = [];
     for (const genreRecord of record.genres) {
-      const genre = new Genre(genreRecord.id);
-      genre.name = genreRecord.name;
+      const genre = new Genre();
+      genre.displayName = genreRecord.display_name;
       book.genres.push(genre);
     }
 
