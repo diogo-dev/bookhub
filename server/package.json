@@ -7,7 +7,7 @@
     "migrate": "ts-node src/infra/umzug/index.ts",
     "migrate:up": "ts-node src/infra/umzug/index.ts up",
     "migrate:down": "ts-node src/infra/umzug/index.ts down --to 0",
-    "populate": "ts-node src/scripts/populate.ts"
+    "populate": "ts-node src/scripts/populate_db.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
