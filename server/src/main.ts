@@ -370,4 +370,4 @@ app.use("/", (error: Error, request: Request, response: Response, next: Function
   response.status(code).json({ message, body });
 });
 
-app.listen(4000, () => console.log("server is running"));
+app.listen(4000, () => console.log("server is running on port", 4000));
