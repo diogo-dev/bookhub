@@ -1,8 +1,8 @@
-import { Work } from "../../domain/Work";
-import { fetchDump } from "./fetchDump";
-import { recordsTemplate } from "../pg/templates";
-import { client } from "../pg/connection";
+import fs from "fs/promises";
+import path from "path";
 import striptags from "striptags";
+import { WorkDTO } from "@/domain/WorkDTO";
+import { downloadDump } from "./downloadDump";
 
 interface WorkOpenLibraryImpl {
   ref: string;
@@ -19,19 +19,13 @@ interface WorkOpenLibraryImpl {
 export async function fetchWorksBy(refs: Set<string>): Promise<{
   workAuthors: Map<string, string[]>;
 }> {
+  const workMapping = new Map<string, string>();
   const workAuthors = new Map<string, string[]>();
 
-  await fetchDump<WorkOpenLibraryImpl, Work & { ref: string; author_refs: string[] }>({
+  await downloadDump<WorkOpenLibraryImpl, WorkDTO | null>({
     name: "works",
-    url: "https://openlibrary.org/data/ol_dump_works_latest.txt.gz",
-    before: async () => {
-      await client.query(`
-        CREATE TEMP TABLE work_mapping (
-          open_library_id VARCHAR(255) PRIMARY KEY,
-          app_id UUID NOT NULL
-        );
-      `);
-    },
+    inputURL: "https://openlibrary.org/data/ol_dump_works_latest.txt.gz",
+    outputPath: "data/works.jsonl",
     parse: (line: string): WorkOpenLibraryImpl => {
       const columns = line.split("\t");
       const ref = columns[1];
@@ -51,61 +45,33 @@ export async function fetchWorksBy(refs: Set<string>): Promise<{
         authors
       };
     },
-    adapt: (obj: WorkOpenLibraryImpl): Work & { ref: string; author_refs: string[] } => {
-      const work = new Work();
-      work.title = obj.title ? obj.title.slice(0, 255) : "";
-      work.subtitle = obj.subtitle ? obj.subtitle.slice(0, 255) : "";
-      work.description = obj.description ? striptags(obj.description.value) : "";
-      const author_refs = obj.authors
-        ? obj.authors.map(a => a.author?.key).filter(a => a != undefined)
-        : [];
+    adapt: (obj: WorkOpenLibraryImpl): WorkDTO | null => {
+      const work: WorkDTO = {
+        ID: crypto.randomUUID(),
+        title: obj.title ? obj.title.slice(0, 255) : "",
+        subtitle: obj.subtitle ? obj.subtitle.slice(0, 255) : "",
+        description: obj.description ? striptags(obj.description.value) : "",
+        authors: obj.authors
+          ? obj.authors.map(a => a.author?.key).filter(a => a != undefined)
+          : [],
+        editions: [],
+        createdAt: Date.now()
+      };
 
-      return { ...work, ref: obj.ref, author_refs };
-    },
-    store: async (works: (Work & { ref: string; author_refs: string[] })[]) => {
-      const workProps = [];
-      const workMapping = [];
-      for (const work of works) {
-        if (work.title && refs.has(work.ref)) {
-          workAuthors.set(work.ID, work.author_refs);
-          workMapping.push(work.ref, work.ID);
-          workProps.push(
-            work.ID,
-            work.title,
-            work.subtitle,
-            work.description,
-            work.createdAt
-          );
-        }
+      if (work.title && refs.has(obj.ref)) {
+        workMapping.set(obj.ref, work.ID);
+        workAuthors.set(work.ID, work.authors);
+        return work;
       }
 
-      let template = recordsTemplate({
-        numberOfRecords: workProps.length / 5,
-        sizeOfRecord: 5,
-        casting: ["uuid", "varchar", "varchar", "text", "bigint"]
-      });
-
-      if (template) {
-        await client.query(
-          `INSERT INTO work (id, title, subtitle, description, created_at) VALUES ${template};`,
-          workProps
-        );
-      }
-
-      template = recordsTemplate({
-        numberOfRecords: workMapping.length / 2,
-        sizeOfRecord: 2,
-        casting: ["varchar", "uuid"]
-      });
-
-      if (template) {
-        client.query(
-          `INSERT INTO work_mapping (open_library_id, app_id) VALUES ${template};`,
-          workMapping
-        );
-      }
+      else return null;
     }
   });
+
+  fs.writeFile(
+    path.resolve(__dirname, "data/work_mapping.csv"),
+    Array.from(workMapping).join("\n")
+  );
 
   return { workAuthors };
 }
