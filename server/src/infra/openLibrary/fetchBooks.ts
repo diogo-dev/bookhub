@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+import path from "path";
 import striptags from "striptags";
 import { BookDTO } from "../../domain/BookDTO";
 import { downloadDump } from "./downloadDump";
@@ -33,6 +35,7 @@ interface BookOpenLibraryImpl {
 export async function fetchBooksBy(refs: Set<string>): Promise<{
   bookAuthors: Map<string, string[]>
 }> {
+  const bookMapping = new Map<string, string>();
   const bookAuthors = new Map<string, string[]>();
 
   await downloadDump<BookOpenLibraryImpl, BookDTO | null>({
@@ -112,6 +115,7 @@ export async function fetchBooksBy(refs: Set<string>): Promise<{
       };
 
       if (book.ISBN && book.title && refs.has(obj.ref)) {
+        bookMapping.set(obj.ref, book.ISBN);
         bookAuthors.set(book.ISBN, book.authors);
         return book;
       }
@@ -119,6 +123,11 @@ export async function fetchBooksBy(refs: Set<string>): Promise<{
       else return null;
     }
   });
+
+  fs.writeFile(
+    path.resolve(__dirname, "data/book_mapping.csv"),
+    Array.from(bookMapping).join("\n")
+  );
 
   return { bookAuthors };
 }

@@ -10,7 +10,7 @@ export async function loadJSONL<FileRecord>(params: {
   const absolutePath = path.resolve(__dirname, params.relativePath);
   const fileContent = fs.readFileSync(absolutePath, "utf-8");
 
-  const BATCH_LIMIT = 10_000;
+  const BATCH_LIMIT = 4500;
   let batch: FileRecord[] = [];
 
   const flush = async () => {

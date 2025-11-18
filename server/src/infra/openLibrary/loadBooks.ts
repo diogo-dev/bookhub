@@ -119,20 +119,18 @@ export async function loadBooks(params: {
       for (const book of books) {
         for (const authorRef of book.authors) {
           const authorID = params.authorMapping.get(authorRef);
-          if (authorID == undefined) throw new Error(`Author ${authorRef} not found`);
-
-          bookAuthors.push(book.ISBN, authorID);
+          if (authorID) bookAuthors.push(book.ISBN, authorID);
         }
       }
 
       template = recordsTemplate({
         numberOfRecords: bookAuthors.length / 2,
         sizeOfRecord: 2,
-        casting: ["varchar", "varchar"]
+        casting: ["varchar", "uuid"]
       });
 
       await client.query(
-        `INSERT INTO book_author (book_isbn, author_id) VALUES ${template};`,
+        `INSERT INTO book_author (book_isbn, author_id) VALUES ${template} ON CONFLICT DO NOTHING;`,
         bookAuthors
       );
 

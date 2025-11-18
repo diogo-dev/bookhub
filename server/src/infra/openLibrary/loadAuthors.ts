@@ -12,7 +12,7 @@ export function loadAuthors(): Promise<void> {
         authorProps.push(
           author.ID,
           author.name,
-          author.biography,
+          author.biography || "",
           author.birthDate,
           author.deathDate,
           author.createdAt

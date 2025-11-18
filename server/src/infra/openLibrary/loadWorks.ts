@@ -22,9 +22,7 @@ export async function loadWorks(params: {
 
         for (const authorRef of work.authors) {
           const authorID = params.authorMapping.get(authorRef);
-          if (authorID == undefined) throw new Error(`Author ${authorRef} not found`);
-          
-          workAuthors.push(work.ID, authorID);
+          if (authorID) workAuthors.push(work.ID, authorID);
         }
       }
 
@@ -46,7 +44,7 @@ export async function loadWorks(params: {
       });
 
       await client.query(
-        `INSERT INTO work_author (work_id, author_id) VALUES ${template};`,
+        `INSERT INTO work_author (work_id, author_id) VALUES ${template} ON CONFLICT DO NOTHING;`,
         workAuthors
       );
     }
