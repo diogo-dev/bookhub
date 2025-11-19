@@ -1,4 +1,4 @@
-export function paramsTemplate(params: { n: number }): string {
+export function templateOfList(params: { n: number }): string {
   let template = "(";
 
   for (let i = 1; i <= params.n; i++) {

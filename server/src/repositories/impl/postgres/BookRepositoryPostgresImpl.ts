@@ -13,6 +13,7 @@ import { GenreRecord } from "./GenreRepositoryPostgresImpl";
 import { LanguageRecord } from "@/repositories/impl/postgres/LanguageRepositoryPostgresImpl";
 import { BookItemRecord } from "@/repositories/impl/postgres/ItemRepositoryPostgresImpl";
 import { Client } from "pg";
+import { templateOfList } from "@/infra/pg/templates";
 
 interface BookRecord {
   isbn: string;
@@ -162,6 +163,47 @@ export class BookRepositoryPostgresImpl implements BookRepository {
 
       return fuzzySearch.rows.map((row) => this.deserialize(row));
     }
+  }
+
+  public async listCatalog(options?: { booksPerRow?: number; }) {
+    const booksPerRow = options?.booksPerRow || 8;
+
+    const topBooks = (await this.client.query(`
+      SELECT DISTINCT ON (bp.isbn) * FROM book_popularity bp
+      ORDER BY bp.isbn, bp.popularity_score DESC
+      LIMIT ${booksPerRow};
+    `)).rows.map(book => ({ ...book, ISBN: book.isbn }));
+
+    const topBooksBy = (genre: string) => (
+      this.client.query(`
+        SELECT DISTINCT ON (bp.isbn)
+          bp.*,
+          author_obj.list as authors
+        FROM book_popularity bp
+        JOIN book_genre bg ON bp.isbn = bg.book_isbn
+        JOIN LATERAL (
+          SELECT ARRAY_AGG(a.name ORDER BY a.name) AS list
+          FROM book_author ba
+          JOIN author a ON ba.author_id = a.id
+          WHERE ba.book_isbn = bp.isbn
+        ) AS author_obj ON TRUE
+        WHERE bg.genre LIKE $1
+        ORDER BY bp.isbn, bp.popularity_score DESC
+        LIMIT ${booksPerRow};`,
+        [`%${genre}%`]
+      )
+    ).then(result => result.rows.map(book => ({ ...book, ISBN: book.isbn })));
+
+    const catalog: Record<string, Book[]> = {
+      trends: topBooks,
+      fiction: await topBooksBy("fiction"),
+      kids: await topBooksBy("juvenile"),
+      drama: await topBooksBy("drama"),
+      humor: await topBooksBy("humor"),
+      poetry: await topBooksBy("poetry"),
+    };
+
+    return catalog;
   }
 
   public async save(book: Book): Promise<void> {

@@ -4,6 +4,7 @@ import cors from "cors";
 import express, { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { client } from "./infra/pg/connection";
+import "./scripts/refresh_catalog";
 
 import { Account } from "./domain/Account";
 import { Author } from "./domain/Author";
@@ -193,6 +194,23 @@ app.post("/categories", async (request: Request, response: Response) => {
   await categoryRepository.save(category);
 
   response.status(201).json(category);
+});
+
+app.get("/books", async (request: Request, response: Response) => {
+  const catalog = await bookRepository.listCatalog();
+  const view: Record<string, any[]> = {};
+
+  for (const genre in catalog) {
+    view[genre] = catalog[genre].map(book => ({
+      ISBN: book.ISBN,
+      title: book.title,
+      subtitle: book.subtitle,
+      authors: book.authors,
+      cover: book.cover
+    }));
+  }
+
+  response.json(view);
 });
 
 app.get("/books/:isbn", async (request: Request, response: Response) => {
