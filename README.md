@@ -15,7 +15,7 @@ Install the following techs
 2. Install packages `npm i` for each directory `client/` and `server/`
 3. On server, run migrations `npm run migrate:up`
     1. To revert migrations, run `npm run migrate:down`
-    2. To populate database, run `npm run populate` (NOTE: it may take one hour to load full dump)
+    2. To populate database, run `npm run populate`
 4. Execute client and server on development `npm run dev`
 
 ## Project structure
