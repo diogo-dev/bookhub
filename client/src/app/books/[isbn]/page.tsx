@@ -16,8 +16,8 @@ export default async function BookDetails(props: {
       <div className={styles.content}>
         <div>
           <div className={styles.cover}>Capa</div>
-          <button className={styles.btnPrimary}>Reservar</button>
-          <button>Tenho interesse</button>
+          <button className={styles.btnPrimary}>Reserve</button>
+          <button>Add to wishlist</button>
         </div>
         <div>
           <Expand className={styles.subject} maxHeight={280}>

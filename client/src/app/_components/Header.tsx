@@ -11,7 +11,7 @@ export function Header() {
           <span>BookHub</span>
         </Link>
         <nav>
-          <Link href="/register">Cadastro</Link>
+          <Link href="/register">Register</Link>
           <Link href="/login">Login</Link>
         </nav>
       </div>
