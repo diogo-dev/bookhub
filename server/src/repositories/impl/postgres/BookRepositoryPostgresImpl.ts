@@ -345,8 +345,8 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     }
 
     book.title = record.title;
-    book.subtitle = record.subtitle = "";
-    book.description = record.description = "";
+    book.subtitle = record.subtitle || "";
+    book.description = record.description || "";
     book.cover = record.cover;
 
     book.authors = [];
