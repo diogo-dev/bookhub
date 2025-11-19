@@ -11,7 +11,7 @@ export function Footer() {
         <FaBook size={24} />
         <div>
           <p className={styles.location}>
-            © 2025 BookHub. Biblioteca Central (BCE). 12.345.678/0001-95<br />
+            <b>© 2025 BookHub. Biblioteca Central (BCE).</b> 12.345.678/0001-95<br />
             Av. Colombo, 5790 - Zona 7, Maringá - PR, 87020-900
           </p>
           <div className={styles.contact}>
