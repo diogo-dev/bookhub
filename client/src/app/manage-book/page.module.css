@@ -1,0 +1,26 @@
+.title {
+    margin-bottom: 18px;
+}
+
+.p {
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.linkContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.link {
+    display: inline-block;
+    width: fit-content;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+}
+
+.link:hover {
+    opacity: 0.5;
+}

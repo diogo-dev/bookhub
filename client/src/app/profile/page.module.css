@@ -1,0 +1,80 @@
+.title {
+    margin-bottom: 15px;
+}
+
+.myprofile {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.myprofile input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 3px solid #000;
+  background-color: #fff;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  outline: none;
+}
+
+.myprofile p {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.myprofile input:disabled {
+  background-color: #c2c2c2;
+}
+
+.separator {
+  border-top: 4px dashed #000;
+  margin: 10px 0;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+}
+
+.link {
+  display: inline-block;
+  margin-top: 25px;
+  margin-bottom: 5px;
+  color: black;
+}
+
+.link:hover {
+  opacity: 0.5;
+}
+
+.updateButton {
+  text-decoration: underline;
+  font-size: 15px;
+}
+
+.updateButton:hover {
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+.button {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  background-color: #fff;
+  border: 3px solid #000;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  margin-top: 15px;
+  transition: background-color 0.2s, color 0.2s;
+  text-decoration: underline;
+}
+
+.button:hover {
+  background-color: #000;
+  color: #fff;
+}
+
