@@ -14,4 +14,6 @@ import { client } from "../infra/pg/connection";
 
   clearInterval(progress);
   await client.end();
+  
+  console.log("\nSuccessfully populated database.");
 })();
