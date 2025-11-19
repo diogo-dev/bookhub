@@ -25,7 +25,7 @@ export default async function Home() {
     <div className={styles.container}>
       <div className={styles.inputContainer}>
         <IoSearch color="black" size={20} />
-        <input type="text" />
+        <input name="book" type="text" placeholder="Search for books..." />
       </div>
 
       {Object.entries(topBooksPerGenre).map(([genre, topBooks]) => (
