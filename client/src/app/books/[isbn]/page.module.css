@@ -1,3 +1,14 @@
+.error {
+  font-size: 1.125rem;
+}
+
+.container > a {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: black;
+}
+
 .content {
   display: flex;
   align-items: flex-start;
@@ -7,16 +18,12 @@
   border: 2px solid black;
 }
 
-.cover {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 15rem;
-  height: 17.5rem;
-  font-size: 1.125rem;
-  font-weight: 500;
-  border: 2px dashed black;
-  margin-bottom: 1.5rem;
+.content > div:first-child {
+  width: min-content;
+}
+
+.content > div:last-child {
+  width: 100%;
 }
 
 .content button {
@@ -36,24 +43,34 @@
 .content .btnPrimary {
   color: white;
   background: black;
+  margin-top: 1rem;
 }
 
 .content button + button {
   margin-top: 0.25rem;
 }
 
+.content .categoryTree {
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: hsl(241, 50%, 45%);
+  line-height: 1.4em;
+}
+
 .content h1 {
-  font-size: 1.125rem;
+  font-size: 1.1875rem;
+  line-height: 1.4em;
 }
 
 .content h1 + span {
-  font-size: 1rem;
+  font-size: 0.9375rem;
 }
 
 .content p {
   line-height: 1.3;
   margin-top: 1.5rem;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 
 .content .metadata {
@@ -61,12 +78,14 @@
   align-items: flex-start;
   gap: 1.5rem;
   margin-top: 1.25rem;
+  width: 100%;
 }
 
 .content .metadata .column {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
+  width: 100%;
 }
 
 .content .property {

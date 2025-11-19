@@ -1,0 +1,19 @@
+.cover {
+  display: inline-block;
+  border: 2px solid black;
+  width: 14.8125rem;
+  height: 17.3125rem;
+}
+
+.cover.error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(0, 0, 85);
+}
+
+.cover.error svg {
+  width: 3rem;
+  height: 3rem;
+  color: hsl(0, 0, 65);
+}

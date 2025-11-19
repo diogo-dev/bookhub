@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         port: '4000',
         pathname: '/**',
       },
+      {
+        protocol: "https",
+        hostname: "covers.openlibrary.org",
+        port: "",
+        pathname: "/**",
+      }
     ],
   }
 };

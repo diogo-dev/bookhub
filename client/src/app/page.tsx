@@ -1,12 +1,25 @@
 import Link from "next/link";
 import { IoSearch } from "react-icons/io5";
-import { booksPerCategory } from "./fakeBooks";
 import { Carrousel } from "./_components/Carrousel";
+import { get } from "./api";
 
 import styles from "./page.module.css";
+import { BookCover } from "./_components/BookCover";
 
-export default function Home() {
-  const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+interface Book {
+  ISBN: string;
+  title: string;
+  subtitle: string;
+  authors?: string[];
+  cover?: string;
+}
+
+export default async function Home() {  
+  const response = await get("/books");
+  
+  if (response.status == 200)
+    var topBooksPerGenre: Record<string, Book[]> = await response.json();
+  else return <h1 className={styles.error}>{response.status} {response.statusText}</h1>;
 
   return (
     <div className={styles.container}>
@@ -15,16 +28,22 @@ export default function Home() {
         <input type="text" />
       </div>
 
-      {Object.entries(booksPerCategory).map(([category, books]) => (
-        <section key={category}>
-          <h1>{capitalize(category)}</h1>
+      {Object.entries(topBooksPerGenre).map(([genre, topBooks]) => (
+        <section key={genre}>
+          <h1>{capitalize(genre)}</h1>
             <Carrousel>
               <ul>
-                {books.map((book) => (
-                  <li key={book.title}>
-                    <Link href={`/books/${book.isbn}`}>
-                      <div className={styles.cover}></div>
-                      <span><b>{book.title}</b> — {book.author}</span>
+                {topBooks.map((book) => (
+                  <li key={book.ISBN}>
+                    <Link href={`/books/${book.ISBN}`}>
+                      <BookCover coverID={book.cover} />
+                      <span>
+                        <b>{book.title}</b>
+                        {Array.isArray(book.authors) || book.subtitle ? " — " : ""}
+                        {Array.isArray(book.authors)
+                          ? book.authors?.join(", ")
+                          : book.subtitle
+                        }</span>
                     </Link>
                   </li>
                 ))}
@@ -34,4 +53,8 @@ export default function Home() {
       ))}
     </div>
   );
+}
+
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
