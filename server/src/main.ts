@@ -22,8 +22,17 @@ import { LanguageRepositoryPostgresImpl } from "./repositories/impl/postgres/Lan
 import { PermissionRepositoryPostgresImpl } from "./repositories/impl/postgres/PermissionRepositoryPostgresImpl";
 import { RoleRepositoryPostgresImpl } from "./repositories/impl/postgres/RoleRepositoryPostgresImpl";
 import { UsersRepositoryPosgresImpl } from "./repositories/impl/postgres/UsersRepositoryPosgresImpl";
+import { InterestRepositoryPostgresImpl } from "./repositories/impl/postgres/InterestRepositoryPostgresImpl";
+import { InterestService } from "./services/InterestService";
+import { LoanService } from "./services/LoanService";
+import { LoanRepositoryPostgresImpl } from "./repositories/impl/postgres/LoanRepositoryPostgresImpl";
+import { ReservationRepositoryPostgresImpl } from "./repositories/impl/postgres/ReservationRepositoryPostgresImpl";
+
+import { AuthRequest } from "./dto/AuthRequest";
 
 import { AuthService } from "./auth/auth.service";
+import { ProfileService } from "./services/ProfileService";
+import { authenticateJWT } from "./auth/middleware";
 
 const app = express();
 app.use(express.json());
@@ -42,8 +51,14 @@ const languageRepository = new LanguageRepositoryPostgresImpl(client);
 const roleRepository = new RoleRepositoryPostgresImpl(client);
 const permissionRepository = new PermissionRepositoryPostgresImpl(client);
 const usersRepository = new UsersRepositoryPosgresImpl(client);
+const loanRepository = new LoanRepositoryPostgresImpl(client);
+const reservationRepository = new ReservationRepositoryPostgresImpl(client);
 
 const authService = new AuthService(usersRepository, roleRepository);
+const profileService = new ProfileService(usersRepository);
+const interestRepository = new InterestRepositoryPostgresImpl(client);
+const interestService = new InterestService(interestRepository, bookRepository);
+const loanService = new LoanService(loanRepository, reservationRepository, itemRepository, client);
 
 app.post("/auth/login", async (req: Request, res: Response) => {
   try {
@@ -110,6 +125,201 @@ app.get("/users:id", async (request: Request, response: Response) => {
   response.json(user);
 })
 
+app.get('/me', authenticateJWT, async (req: AuthRequest, res: Response) => { 
+
+  try { 
+    const userId = req.user!.sub;
+    const user = await profileService.getProfile(userId);
+
+    return res.status(200).json({
+      id: user.ID,
+      name: user.name,
+      email: user.email,
+      cpf: user.cpf,
+      roles: user.roles.map(r => r.name),
+      createdAt: user.createdAt
+    });
+  } catch (error: any) {
+    return res.status(401).json({ message: error.message || "Falha ao buscar perfil do usuário." });
+  }
+});
+
+app.patch('/me', authenticateJWT, async (req: AuthRequest, res: Response) => { 
+  try { 
+    const schema = z.object({
+      name: z.string().optional(),
+      email: z.email().optional(),
+      password: z.string().optional()
+    });
+
+    const params = schema.parse(req.body);
+    const userId = req.user!.sub;
+
+    const updateUser = await profileService.updateProfile(userId, params);
+
+    return res.status(200).json({
+      id: updateUser.ID,
+      name: updateUser.name,
+      email: updateUser.email,
+      cpf: updateUser.cpf,
+      roles: updateUser.roles.map(r => r.name),
+      createdAt: updateUser.createdAt
+    });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Erro de validação", errors: error.issues });
+    }
+
+    return res.status(400).json({ message: error.message || "Falha ao atualizar perfil do usuário." });
+  }
+});
+
+app.delete('/me', authenticateJWT, async (req: AuthRequest, res: Response) => { 
+  try { 
+    const userId = req.user!.sub;
+    await profileService.deleteAccount(userId);
+
+    return res.status(200).json({ message: "Conta deletada com sucesso." });
+  } catch (error: any) {
+    return res.status(400).json({ message: error.message || "Falha ao deletar conta." });
+  }
+});
+
+app.get("/me/interests", authenticateJWT, async (req: AuthRequest, res: Response) => { 
+  try { 
+    const userId = req.user!.sub;
+    const interests = await interestService.getUserInterests(userId);
+    return res.status(200).json(interests);
+  } catch (error: any) {
+    return res.status(400).json({ message: error.message || "Falha ao buscar interesses do usuário." });
+  }
+});
+
+app.post("/me/interests", authenticateJWT, async (req: AuthRequest, res: Response) => { 
+  try { 
+    const schema = z.object({
+      bookISBN: z.string().max(13).regex(/^\d+$/)
+    });
+
+    const params = schema.parse(req.body);
+    const userId = req.user!.sub;
+
+    const interest = await interestService.addInterest(userId, params.bookISBN);
+
+    return res.status(201).json(interest);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Erro de validação", errors: error.issues });
+    }
+    return res.status(400).json({ message: error.message || "Falha ao adicionar interesse." });
+  }
+});
+
+app.delete("/me/interests/:isbn", authenticateJWT, async (req: AuthRequest, res: Response) => { 
+  try { 
+    const schema = z.object({
+      isbn: z.string().max(13).regex(/^\d+$/)
+    });
+
+    const params = schema.parse(req.params);
+    const userId = req.user!.sub;
+
+    await interestService.removeInterest(userId, params.isbn);
+    return res.status(200).json({ message: "Interesse removido com sucesso." });
+  } catch (error: any) {
+    return res.status(400).json({ message: error.message || "Falha ao remover interesse." });
+  }
+});
+
+app.get("/me/loans", authenticateJWT, async(req: AuthRequest, res: Response) => { 
+  try { 
+    const userId = req.user!.sub;
+    const loans = await loanService.getUserLoans(userId);
+    return res.status(200).json(loans);
+  } catch (error: any) {
+    return res.status(400).json({ message: error.message || "Falha ao buscar empréstimos do usuário." });
+  }
+});
+
+app.post("/reservations", authenticateJWT, async(req: AuthRequest, res: Response) => { 
+
+  try { 
+    const schema = z.object({
+      itemID: z.uuid(),
+      startAt: z.coerce.number(),
+      endAt: z.coerce.number()
+    });
+
+    const params = schema.parse(req.body);
+    const userId = req.user!.sub;
+
+    const reservation = await loanService.createReservation(userId, params.itemID, params.startAt, params.endAt);
+    return res.status(201).json(reservation);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Dados inválidos", errors: error.issues });
+    }
+    return res.status(400).json({ message: error.message || "Falha ao criar reserva." });
+  }
+});
+
+app.post("/loans", authenticateJWT, async(req: AuthRequest, res: Response) => { 
+  try { 
+    const schema = z.object({
+      itemID: z.uuid(),
+      startAt: z.coerce.number(),
+      dueAt: z.coerce.number(),
+      reservationID: z.uuid().optional()
+    });
+
+    const params = schema.parse(req.body);
+    const userId = req.user!.sub;
+
+    const loan = await loanService.createLoan(userId, params.itemID, params.startAt, params.dueAt, params.reservationID);
+
+    return res.status(201).json(loan);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Dados inválidos", errors: error.issues });
+    }
+    return res.status(400).json({ message: error.message || "Falha ao criar empréstimo." });
+  }
+});
+
+app.patch("/loans/:id/return", authenticateJWT, async(req: AuthRequest, res: Response) => { 
+  try { 
+    const schema = z.object({
+      id: z.uuid()
+    });
+
+    const params = schema.parse(req.params);
+    const userId = req.user!.sub;
+    
+    // Buscar empréstimo primeiro para validar propriedade
+    const loan = await loanRepository.findById(params.id);
+    if (!loan) {
+      return res.status(404).json({ message: "Empréstimo não encontrado" });
+    }
+    
+    // Validar se o empréstimo pertence ao usuário autenticado
+    if (loan.userID !== userId) {
+      return res.status(403).json({ message: "Acesso negado: empréstimo não pertence ao usuário" });
+    }
+    
+    // Agora sim, devolver o empréstimo
+    const returnedLoan = await loanService.returnLoan(params.id);
+
+    return res.status(200).json({
+      message: "Empréstimo devolvido com sucesso.",
+      loan: returnedLoan
+    });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Dados inválidos", errors: error.issues });
+    }
+    return res.status(400).json({ message: error.message || "Falha ao devolver empréstimo." });
+  }
+});
 app.get("/permissions/:id", async (request: Request, response: Response) => {
  const schema = z.object({
     id: z.uuid()

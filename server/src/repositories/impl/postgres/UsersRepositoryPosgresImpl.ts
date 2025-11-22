@@ -122,5 +122,56 @@ export class UsersRepositoryPosgresImpl implements UsersRepository {
         );
     }
 
+    public async updateProfile(userId: string, data: {name?: string, email?: string, password_hash?: string}): Promise<UserAccount> {
 
+        const existingUser = await this.findById(userId);
+        if (!existingUser) throw new Error('User not found');
+
+        if (data.email && data.email !== existingUser.email) {
+            const emailExists = await this.findByEmail(data.email);
+            if (emailExists) throw new Error('Email already in use');
+        }
+
+        const updates: string[] = [];
+        const values: any[] = [];
+        let paramIndex = 1;
+
+        if (data.name !== undefined) { 
+            updates.push(`name = $${paramIndex++}`);
+            values.push(data.name);
+        }
+
+        if (data.email !== undefined) {
+            updates.push(`email = $${paramIndex++}`);
+            values.push(data.email);
+        }
+
+        if (data.password_hash !== undefined) {
+            updates.push(`password_hash = $${paramIndex++}`);
+            values.push(data.password_hash);
+        }
+
+        if (updates.length === 0) return existingUser;
+
+        values.push(userId);
+        await this.client.query(
+            `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex++};`,
+            values
+        )
+
+        const updateUser = await this.findById(userId);
+        if (!updateUser) throw new Error('Error to found user after update');
+
+        return updateUser;
+    }
+    
+    public async deleteById(userId: string): Promise<void> {
+
+        const result = await this.client.query(
+            `DELETE FROM users WHERE id = $1;`,
+            [userId]
+        );
+
+        if (result.rowCount === 0) throw new Error('User not found');
+    }
 }
