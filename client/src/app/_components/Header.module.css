@@ -1,5 +1,4 @@
 .container {
-  /* border-bottom: 2px solid black; */
   width: 100%;
 }
 
@@ -9,6 +8,14 @@
   width: 100%;
   padding: 1rem 2rem;
   justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0px 1px 8px rgba(0,0,0,0.1);
+}
+
+/* Nova seção esquerda que agrupa sidebar e logo */
+.leftSection {
+  display: flex;
   align-items: center;
   gap: 1rem;
 }
@@ -78,7 +85,7 @@
 }
 
 .loginButton {
-  background: #00033b;
+  background: #0159cb;
   border-radius: 0.5rem;
   padding: 0.625rem 1.5rem;
   cursor: pointer;
@@ -127,6 +134,51 @@
   transition: color 0.25s ease;
 }
 
+/* Estilos para usuário autenticado */
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.userName {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1.5px solid #00033b;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  color: #00033b;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+}
+
+.logoutButton:hover {
+  background: #00033b;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 3, 59, 0.2);
+}
+
+.logoutButton:active {
+  transform: translateY(0);
+}
+
+.logoutButton svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
 @media (max-width: 768px) {
   .content {
     padding: 1rem 1.5rem;
@@ -153,6 +205,19 @@
   .loginButton {
     padding: 0.5rem 1.25rem;
     font-size: 0.875rem;
+  }
+
+  .userName {
+    display: none; /* Esconde o nome em telas menores */
+  }
+
+  .logoutButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .userSection {
+    gap: 0.75rem;
   }
 }
 
@@ -182,5 +247,13 @@
   .loginButton {
     padding: 0.5rem 1rem;
     font-size: 0.8125rem;
+  }
+
+  .logoutButton span {
+    display: none; /* Mostra apenas o ícone */
+  }
+
+  .logoutButton {
+    padding: 0.5rem;
   }
 }
