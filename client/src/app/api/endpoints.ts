@@ -5,5 +5,7 @@ export const API_ENDPOINTS = {
     auth : {
         login: `${BASE_URL}/auth/login`,
         register: `${BASE_URL}/auth/register`
-    }
+    },
+    profile : `${BASE_URL}/me`,
+    reservation: `${BASE_URL}/reservations/users/`
 }

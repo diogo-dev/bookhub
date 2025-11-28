@@ -116,6 +116,30 @@ app.post("/auth/register", async (req: Request, res: Response) => {
   }
 });
 
+app.get("/reservations/users/:cpf", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+      const schema = z.object({
+      cpf: z.string().min(11).max(14)
+    });
+
+    const params = schema.parse(req.params);
+    const user = await usersRepository.findByCpf(params.cpf);
+    if (!user) throw new HttpError(404, "user not found");
+
+    const reservations = await reservationRepository.findReservationListByUser(user.ID)
+    if (!reservations) throw new HttpError(404, "reservations not found");
+
+    return res.status(200).json({
+      user,
+      reservations
+    })
+  } catch (error: any) {
+    return res.status(400).json({
+      message: error.message || "Erro ao registar usuário"
+    });
+  }
+})
+
 app.get("/users:id", async (request: Request, response: Response) => {
  const schema = z.object({
     id: z.uuid()
@@ -325,6 +349,7 @@ app.patch("/loans/:id/return", authenticateJWT, async(req: AuthRequest, res: Res
     return res.status(400).json({ message: error.message || "Falha ao devolver empréstimo." });
   }
 });
+
 app.get("/permissions/:id", async (request: Request, response: Response) => {
  const schema = z.object({
     id: z.uuid()

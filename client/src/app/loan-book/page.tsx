@@ -17,14 +17,14 @@ export default function LoanBookPage() {
 
                 <div className={styles.linkContainer}>
                     <Link
-                        href="/login"
+                        href="/loan-reserved-book"
                         className={styles.link}
                     >
                         Empréstimo Reservado
                     </Link>
 
                     <Link
-                        href="/login"
+                        href="/loan-new-book"
                         className={styles.link}
                     >
                         Novo Empréstimo

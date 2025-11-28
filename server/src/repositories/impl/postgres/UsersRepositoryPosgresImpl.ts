@@ -66,6 +66,19 @@ export class UsersRepositoryPosgresImpl implements UsersRepository {
         return await this.deserialize(result.rows[0]);
     }
 
+    public async findByCpf(userCPF: string): Promise<UserAccount | null> {
+        // retira a máscara caso ainda tenha
+        const cleanCpf = userCPF.replace(/\D/g, "");
+
+        const result = await this.client.query(
+            "SELECT * FROM users WHERE cpf = $1;",
+            [cleanCpf]
+        );
+
+        if (result.rows.length === 0) return null;
+        return await this.deserialize(result.rows[0]);
+    }
+
     private async getRoleDetails(userID: string): Promise<{ id: string; name: string; permissions: string[] }[]> {
         // Obtém as roles e suas permissões
         const result = await this.client.query(
