@@ -12,7 +12,7 @@ export function ClientLayout({ children }: LayoutProps) {
   const pathname = usePathname();
 
   const menuItems = [
-    { path: '/profile', label: 'Meu Perfil' },
+    { path: '/user-profile', label: 'Meu Perfil' },
     { path: '/interests', label: 'Lista de interesses' },
     { path: '/loans', label: 'Histórico de empréstimos' }
   ];

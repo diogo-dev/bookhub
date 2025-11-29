@@ -14,6 +14,7 @@ export function EmployeeLayout({ children }: LayoutProps) {
   // colocar a página de descritores? { path: '/descritores', label: 'Gestão de descritores' }
 
   const menuItems = [
+    { path: '/admin-profile', label: 'Meu Perfil' },
     { path: '/manage-book', label: 'Gestão de livros' },
     { path: '/loan-book', label: 'Empréstimo de livros' },
     { path: '/return-book', label: 'Devolução de livros' },

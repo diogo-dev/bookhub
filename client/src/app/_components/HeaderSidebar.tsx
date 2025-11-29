@@ -20,13 +20,13 @@ export function HeaderSidebar({ userRoles }: HeaderSidebarProps) {
 
     if (userRoles.includes("ADMIN")) {
       items.push(
-        { href: "/profile", label: "Meu Perfil", icon: <FaCircleUser />, roles: ["ADMIN"] },
+        { href: "/admin-profile", label: "Meu Perfil", icon: <FaCircleUser />, roles: ["ADMIN"] },
         { href: "/manage-book", label: "Gestão de Livros", icon: <FiBook />, roles: ["ADMIN"] },
         { href: "/return-book", label: "Devolução de Livro", icon: <FiBook />, roles: ["ADMIN"] }
       );
     } else {
       items.push(
-        { href: "/profile", label: "Meu Perfil", icon: <FaCircleUser />, roles: ["USER"] }
+        { href: "/user-profile", label: "Meu Perfil", icon: <FaCircleUser />, roles: ["USER"] }
       );
     }
 

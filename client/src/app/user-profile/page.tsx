@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { API_ENDPOINTS } from "../api/endpoints";
 
 
-export default function Profile() {
+export default function UserProfile() {
 
     const formatCPF = (value: string): string => {
         const numbers = value.replace(/\D/g, '');
