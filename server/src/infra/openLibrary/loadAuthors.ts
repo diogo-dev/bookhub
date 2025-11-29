@@ -26,7 +26,7 @@ export function loadAuthors(): Promise<void> {
       });
 
       await client.query(
-        `INSERT INTO author (id, name, biography, birth_date, death_date, created_at) VALUES ${template};`,
+        `INSERT INTO author (id, name, biography, birth_date, death_date, created_at) VALUES ${template} ON CONFLICT (id) DO NOTHING;`,
         authorProps
       );
     }

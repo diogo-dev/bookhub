@@ -33,7 +33,7 @@ export async function loadWorks(params: {
       });
 
       await client.query(
-        `INSERT INTO work (id, title, subtitle, description, created_at) VALUES ${template};`,
+        `INSERT INTO work (id, title, subtitle, description, created_at) VALUES ${template} ON CONFLICT (id) DO NOTHING;`,
         workProps
       );
 

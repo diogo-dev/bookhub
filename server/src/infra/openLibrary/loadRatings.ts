@@ -29,7 +29,7 @@ export function loadRatings(params: {
       });
 
       await client.query(
-        `INSERT INTO rating (id, account_id, work_id, book_isbn, score, created_at) VALUES ${template};`,
+        `INSERT INTO rating (id, account_id, work_id, book_isbn, score, created_at) VALUES ${template} ON CONFLICT (id) DO NOTHING;`,
         ratingProps
       );
     }

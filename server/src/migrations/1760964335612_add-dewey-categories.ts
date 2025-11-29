@@ -47,7 +47,7 @@ function deserialize(params: {
 }
 
 async function insert(mapping: Map<string, DeweyCategory>, client: Client) {
-  const categories = mapping.values().toArray();
+  const categories = Array.from(mapping.values());
   let template = recordsTemplate({
     numberOfRecords: categories.length,
     sizeOfRecord: 6
