@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 
 import "./globals.css";
 import styles from "./layout.module.css";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./_context/AuthContext";
 
 export const metadata: Metadata = {
   title: "BookHub",

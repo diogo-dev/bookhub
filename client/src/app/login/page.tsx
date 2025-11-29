@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AuthForm } from "@/app/_components/AuthForm";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAuth } from "@/app/context/AuthContext";
+import { useAuth } from "@/app/_context/AuthContext";
 
 export default function Login() {
 

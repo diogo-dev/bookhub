@@ -4,7 +4,7 @@ import Link from "next/link";
 import styles from "./Header.module.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../_context/AuthContext";
 import { FiLogOut } from "react-icons/fi";
 import { HeaderSidebar } from "./HeaderSidebar";
 

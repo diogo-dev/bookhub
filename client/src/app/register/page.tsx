@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AuthForm } from "@/app/_components/AuthForm";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../_context/AuthContext";
 
 export default function Register() {
 
@@ -33,7 +33,7 @@ export default function Register() {
   }
 
   function handleBottomLinkClick() {
-    router.push('/login');
+    router.push('/');
   }
 
   return (

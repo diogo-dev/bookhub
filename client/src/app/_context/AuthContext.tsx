@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { API_ENDPOINTS } from "../api/endpoints";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<User | null>(null);
     const isAuthenticated = !!user;
@@ -79,6 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     function logout() {
         localStorage.removeItem("token");
         setUser(null);
+        // mudar para a página principal
+        router.push('/')
     }
 
     async function register(name: string, email: string, cpf: string, password: string) {

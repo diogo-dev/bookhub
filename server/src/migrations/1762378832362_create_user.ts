@@ -53,9 +53,12 @@ export const up = transaction(async (client: Client) => {
 });
 
 export const down = transaction(async (client: Client) => {
+    // deletar primeira as tabelas que dependem das outras 
+    await client.query("DROP TABLE user_role;");
+    await client.query("DROP TABLE role_permission;");
+
+    // deletar as tabelas principais
     await client.query("DROP TABLE users;");
     await client.query("DROP TABLE role;");
     await client.query("DROP TABLE permission;");
-    await client.query("DROP TABLE user_role;");
-    await client.query("DROP TABLE role_permission;");
 });
