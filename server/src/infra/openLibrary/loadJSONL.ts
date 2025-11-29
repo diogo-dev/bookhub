@@ -19,6 +19,7 @@ export async function loadJSONL<FileRecord>(params: {
   }
 
   for (const line of fileContent.split("\n")) {
+    if (!line.trim()) continue;
     const record: FileRecord = JSON.parse(line);
     batch.push(record);
 

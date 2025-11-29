@@ -110,7 +110,7 @@ export async function loadBooks(params: {
       });
 
       await client.query(
-        `INSERT INTO book_item (id, isbn, created_at) VALUES ${template};`,
+        `INSERT INTO book_item (id, isbn, created_at) VALUES ${template} ON CONFLICT (id) DO NOTHING;`,
         bookItems
       );
 
