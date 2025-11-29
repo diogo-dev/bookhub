@@ -6,6 +6,10 @@ export function loadCSV(relativePath: string): Map<string, string> {
   return new Map<string, string>(
     fs.readFileSync(absolutePath, "utf-8")
       .split("\n")
-      .map(line => line.split(",")) as [string, string][]
+      .filter(line => line.trim().length > 0) 
+      .map(line => {
+        const [key, value] = line.split(",");
+        return [key.trim(), value.trim()] as [string, string];
+      })
   );
 }
