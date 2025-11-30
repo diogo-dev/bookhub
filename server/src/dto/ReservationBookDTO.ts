@@ -3,6 +3,7 @@ export interface ReservationBookDTO {
     startAt: string;
     endAt: string;
     itemStatus: string;
+    itemID: string;
     bookTitle: string;
     bookIsbn: string;
     authors: string[];

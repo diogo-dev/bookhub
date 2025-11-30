@@ -6,6 +6,7 @@ export interface BookItemRecord {
   id: string;
   isbn: string;
   created_at: string;
+  status: "disponivel" | "emprestado" | "indisponivel" | "reservado";
 }
 
 export class ItemRepositoryPostgresImpl implements ItemRepository {
@@ -48,6 +49,6 @@ export class ItemRepositoryPostgresImpl implements ItemRepository {
   }
 
   private deserialize(record: BookItemRecord): BookItem {
-    return new BookItem(record.isbn, record.id, Number(record.created_at));
+    return new BookItem(record.isbn, record.id, Number(record.created_at), record.status);
   }
 }

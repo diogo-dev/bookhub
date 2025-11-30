@@ -71,6 +71,7 @@ export class ReservationRepositoryPostgresImpl implements ReservationRepository 
                 r.id AS reservation_id,
                 r.start_at,
                 r.end_at,
+                r.item_id,
                 bi.status AS item_status,
                 b.title AS book_title,
                 b.isbn AS book_isbn,
@@ -100,6 +101,7 @@ export class ReservationRepositoryPostgresImpl implements ReservationRepository 
                     startAt: formatDateFromBigint(row.start_at),
                     endAt: formatDateFromBigint(row.end_at),
                     itemStatus: row.item_status,
+                    itemID: row.item_id,
                     bookTitle: row.book_title,
                     bookIsbn: row.book_isbn,
                     authors: []

@@ -117,6 +117,7 @@ export default function LoanReservedBookPage() {
                                     bookName={r.bookTitle}
                                     bookAuthor={r.authors[0]}
                                     bookId={r.bookIsbn}
+                                    itemId={r.itemID}
                                     start_at={r.startAt}
                                     end_at={r.endAt}
                                 />
