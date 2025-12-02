@@ -122,25 +122,25 @@ app.get("/reservations/users/:cpf", authenticateJWT, async (req: Request, res: R
       cpf: z.string().min(11).max(14)
     });
 
-    const params = schema.parse(req.params);
-    const user = await usersRepository.findByCpf(params.cpf);
-    if (!user) throw new HttpError(404, "user not found");
+      const params = schema.parse(req.params);
+      const user = await usersRepository.findByCpf(params.cpf);
+      if (!user) throw new HttpError(404, "user not found");
 
-    const reservations = await reservationRepository.findReservationListByUser(user.ID)
-    if (!reservations) throw new HttpError(404, "reservations not found");
+      const reservations = await reservationRepository.findReservationListByUser(user.ID)
+      if (!reservations) throw new HttpError(404, "reservations not found");
 
-    return res.status(200).json({
-      user,
-      reservations
-    })
+      return res.status(200).json({
+        user,
+        reservations
+      })
   } catch (error: any) {
-    return res.status(400).json({
-      message: error.message || "Erro ao registar usuário"
-    });
+      return res.status(400).json({
+        message: error.message || "Erro ao registar usuário"
+      });
   }
 })
 
-app.get("/users:id", async (request: Request, response: Response) => {
+app.get("/users/id/:id", async (request: Request, response: Response) => {
  const schema = z.object({
     id: z.uuid()
   });
@@ -148,6 +148,20 @@ app.get("/users:id", async (request: Request, response: Response) => {
   const params = schema.parse(request.params);
 
   const user = await usersRepository.findById(params.id);
+
+  if (!user) throw new HttpError(404, "user not found");
+
+  response.json(user);
+})
+
+app.get("/users/cpf/:cpf", async (request: Request, response: Response) => {
+ const schema = z.object({
+    cpf: z.string().min(11).max(14)
+  });
+
+  const params = schema.parse(request.params);
+
+  const user = await usersRepository.findByCpf(params.cpf);
 
   if (!user) throw new HttpError(404, "user not found");
 
@@ -296,15 +310,15 @@ app.post("/loans", authenticateJWT, async(req: AuthRequest, res: Response) => {
   try { 
     const schema = z.object({
       itemID: z.uuid(),
+      userID: z.uuid(),
       startAt: z.coerce.number(),
       dueAt: z.coerce.number(),
       reservationID: z.uuid().optional()
     });
 
     const params = schema.parse(req.body);
-    const userId = req.user!.sub;
 
-    const loan = await loanService.createLoan(userId, params.itemID, params.startAt, params.dueAt, params.reservationID);
+    const loan = await loanService.createLoan(params.userID, params.itemID, params.startAt, params.dueAt, params.reservationID);
 
     return res.status(201).json(loan);
   } catch (error: any) {
