@@ -1,0 +1,267 @@
+/* Overlay - fundo escuro */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* Container do modal */
+.modal {
+  background-color: white;
+  border: #000 4px solid;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Conteúdo do formulário */
+.content {
+  padding: 32px;
+}
+
+/* Botão de fechar (X) */
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  line-height: 1;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: #000;
+  background-color: #e6e6e6;
+  border-radius: 4px;
+}
+
+/* Título */
+.title {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Descrição */
+.description {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Container do formulário */
+.formContainer {
+  border-top: 3px dashed #000000;
+  padding-top: 16px;
+}
+
+/* Grid de data e hora */
+.dateTimeGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Header row (Data | Hora) */
+.headerRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.columnHeader {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+/* Linhas de input */
+.inputRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+/* Grupo de input */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Label dos inputs */
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Label escondida (para manter alinhamento) */
+.labelHidden {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  opacity: 0;
+  user-select: none;
+}
+
+/* Inputs */
+.input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+/* Botão confirmar */
+.confirmButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirmButton:hover {
+  background-color: #333;
+}
+
+/* Conteúdo de sucesso */
+.successContent {
+  padding: 48px 32px;
+  text-align: center;
+}
+
+/* Círculo com checkmark */
+.checkmarkCircle {
+  width: 80px;
+  height: 80px;
+  border: 4px solid #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  color: #000;
+}
+
+/* Título de sucesso */
+.successTitle {
+  margin-top: 0;
+  margin-bottom: 32px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Container de informações da reserva */
+.reserveInfo {
+  border-top: 3px dashed #000000;
+  padding-top: 24px;
+  text-align: left;
+}
+
+/* Linha de informação */
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+}
+
+/* Label da informação */
+.infoLabel {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Valor da informação */
+.infoValue {
+  font-size: 18px;
+  color: #000;
+}
+
+/* Botão fechar (parte inferior) */
+.closeButtonBottom {
+  width: 100%;
+  padding: 12px;
+  background-color: #000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 32px;
+  transition: background-color 0.2s;
+}
+
+.closeButtonBottom:hover {
+  background-color: #333;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .modal {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .content {
+    padding: 24px;
+  }
+
+  .successContent {
+    padding: 32px 24px;
+  }
+
+  .headerRow,
+  .inputRow {
+    grid-template-columns: 1fr;
+  }
+
+  .columnHeader:last-child {
+    display: none;
+  }
+
+  .labelHidden {
+    display: block;
+    opacity: 1;
+  }
+}
