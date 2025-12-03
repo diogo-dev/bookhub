@@ -3,16 +3,13 @@
 import { useRouter } from "next/navigation";
 import { EmployeeLayout } from "@/app/_components/EmployeeLayout"
 import styles from './page.module.css'
-import Link from "next/link";
-import { ReservedBook } from "../_components/ReservedBook";
-import { use, useEffect, useState } from "react";
-import { get, post } from '../api'
+import { useEffect, useState } from "react";
+import { get } from '../api'
 import { toast } from "sonner";
 import { LoanModal } from "../_components/LoanModal";
 
 export default function LoanNewBookPage() {
 
-    const router = useRouter();
     const [open, setOpen] = useState<boolean>(false);
     const [changeButton, setChangeButton] = useState<boolean>(false);
     const [user, setUser] = useState<any>(null);

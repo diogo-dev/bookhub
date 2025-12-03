@@ -1,14 +1,13 @@
 "use client"
 
 import styles from './page.module.css'
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "../api/endpoints";
+import { useAuth } from "../_context/AuthContext";
 import { EmployeeLayout } from '../_components/EmployeeLayout';
 
-
 export default function AdminProfile() {
+
+    const { user, loading, isAuthenticated } = useAuth();
 
     const formatCPF = (value: string): string => {
         const numbers = value.replace(/\D/g, '');
@@ -17,44 +16,6 @@ export default function AdminProfile() {
                 .slice(0, 14); 
     };
 
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const token = localStorage.getItem("token")
-
-        if(!token) {
-            setLoading(false)
-            console.log("Token not found")
-            return
-        }
-
-        const loadUser = async () => {
-            try {
-                const res = await fetch(API_ENDPOINTS.profile, {
-                    method: "GET", 
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (!res.ok) {
-                    const error = await res.json();
-                    throw new Error(error.message || "Erro na resposta dos dados do perfil");
-                }
-
-                const data = await res.json();
-                setUser(data);
-                console.log(data)
-            } catch (error: any) {
-                toast.error(error.message || "Erro ao buscar dados do perfil", {duration: 2000});
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        loadUser();
-    }, []);
 
     if(loading) {
         return (
@@ -64,7 +25,7 @@ export default function AdminProfile() {
         );
     }
 
-    if (!user) {
+    if (!isAuthenticated || !user) {
         return (
             <EmployeeLayout>
                 <p>Usuário não autenticado</p>
@@ -108,16 +69,6 @@ export default function AdminProfile() {
                 {/* Mudar o href */}
                 <Link href="/login" className={styles.link}>Alterar Senha</Link>
 
-                <hr className={styles.separator} />
-
-                <div>
-                    <h1 className={styles.title}>Deletar Conta</h1>
-
-                    <p>Depois de excluir sua conta não há como voltar atrás!</p>
-                    <p>Certifique-se antes de deletar!</p>
-
-                    <button className={styles.button}>Deletar conta</button>
-                </div>
             </div>
         </EmployeeLayout>
     );

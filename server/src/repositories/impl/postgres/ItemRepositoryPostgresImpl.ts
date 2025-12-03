@@ -41,11 +41,13 @@ export class ItemRepositoryPostgresImpl implements ItemRepository {
     return result.rows.map(this.deserialize);
   }
 
-  public async updateStatus(itemId: string, status: "disponivel" | "emprestado" | "indisponivel" | "reservado"): Promise<void> {
-    await this.client.query(
-      "UPDATE book_item SET status = $1 WHERE id = $2;",
+  public async updateStatus(itemId: string, status: "disponivel" | "emprestado" | "indisponivel" | "reservado"): Promise<BookItem> {
+    const result = await this.client.query(
+      "UPDATE book_item SET status = $1 WHERE id = $2 RETURNING *;",
       [status, itemId]
     );
+
+    return this.deserialize(result.rows[0]);
   }
 
   private deserialize(record: BookItemRecord): BookItem {

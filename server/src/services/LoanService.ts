@@ -4,6 +4,8 @@ import { Client } from "pg";
 import { LoanRepository } from "@/repositories/loanRepository";
 import { Reservation } from "@/domain/Reservation";
 import { Loan } from "@/domain/Loan";
+import { LoanBookDTO } from "@/dto/LoanBookDTO";
+import { BookItem } from "@/domain/BookItem";
 
 export class LoanService { 
     constructor(
@@ -16,11 +18,11 @@ export class LoanService {
     async createReservation(userID: string, itemID: string, startAt: number, endAt: number): Promise<Reservation> {
 
         // talvez não deixar o usuário fazer mais de uma reserva ativa para o mesmo exemplar
-        const activeReservations = await this.reservationRepository.findByUserId(userID);
+        const activeReservations = await this.reservationRepository.findActiveByUserId(userID);
         const now = Date.now();
         const hasActiveReservation = activeReservations.some(r => r.startAt <= now && r.endAt >= now);
         console.log({hasActiveReservation});
-        if (hasActiveReservation) throw new Error("Usuário já tem uma reserva ativa");
+        if (hasActiveReservation) throw new Error("Reserva ativa, compareça na loja para pegar o exemplar");
 
         await this.client.query("BEGIN;");
         try { 
@@ -90,7 +92,7 @@ export class LoanService {
         }
     }
 
-    async returnLoan(loanID: string): Promise<Loan> {
+    async returnLoanAndItem(loanID: string): Promise<{loan: Loan, item: BookItem}> {
         const loan = await this.loanRepository.findById(loanID);
         if (!loan) throw new Error("Empréstimo não encontrado");
         if (loan.status !== "ativo") throw new Error("Empréstimo não ativo");
@@ -99,11 +101,10 @@ export class LoanService {
         await this.client.query("BEGIN;");
         try { 
             loan.markAsReturned();
-        await this.loanRepository.updateStatus(loanID, "devolvido", loan.returnedAt!);
-        await this.itemRepository.updateStatus(loan.itemID, "disponivel");
-
-        await this.client.query("COMMIT;");
-        return loan;
+            await this.loanRepository.updateStatus(loanID, "devolvido", loan.returnedAt!);
+            const item = await this.itemRepository.updateStatus(loan.itemID, "disponivel");
+            await this.client.query("COMMIT;");
+            return {loan, item};
         } catch (error) { 
             await this.client.query("ROLLBACK;");
             throw error;
@@ -112,6 +113,10 @@ export class LoanService {
 
     async getUserLoans(userID: string): Promise<Loan[]> {
         return await this.loanRepository.findByUserId(userID);
+    }
+
+    async getUserLoansAndBookInfo(userID: string): Promise<LoanBookDTO[]> {
+        return await this.loanRepository.findLoanListByUser(userID);
     }
 
     private async getItemStatus(itemID: string): Promise<"disponivel" | "emprestado" | "indisponivel" | "reservado"> {

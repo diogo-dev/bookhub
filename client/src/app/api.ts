@@ -1,5 +1,11 @@
-export function get(route: string) {
-  return fetch(urlOf(route));
+export function get(route: string, token?: string | null) {
+  const headers: Record<string, string> = {};
+
+  if(token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return fetch(urlOf(route), { headers });
 }
 
 export function post(route: string, body?: any, token?: string | null) {
@@ -7,7 +13,6 @@ export function post(route: string, body?: any, token?: string | null) {
     "Content-Type": "application/json",
   };
 
-  // Se houver token, adiciona o Authorization
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -16,6 +21,22 @@ export function post(route: string, body?: any, token?: string | null) {
     method: "POST",
     headers,
     body: JSON.stringify(body),
+  });
+}
+
+export function patch(route: string, body?: any, token?: string | null) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return fetch(urlOf(route), {
+    method: "PATCH",
+    headers,
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
 }
 

@@ -4,5 +4,5 @@ export interface ItemRepository {
   save(item: BookItem): Promise<void>;
   find(id: string): Promise<BookItem | null>;
   findByISBN(ISBN: string): Promise<BookItem[]>;
-  updateStatus(itemId: string, status: "disponivel" | "emprestado" | "indisponivel" | "reservado"): Promise<void>;
+  updateStatus(itemId: string, status: "disponivel" | "emprestado" | "indisponivel" | "reservado"): Promise<BookItem>;
 }

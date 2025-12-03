@@ -3,16 +3,14 @@
 import { useRouter } from "next/navigation";
 import { EmployeeLayout } from "@/app/_components/EmployeeLayout"
 import styles from './page.module.css'
-import Link from "next/link";
-import { ReservedBook } from "../_components/ReservedBook";
+import { BookRecordCard } from "../_components/BookRecordCard";
 import { useEffect, useState } from "react";
-import { API_ENDPOINTS } from "../api/endpoints";
 import { LoanModal } from "../_components/LoanModal";
 import { toast } from "sonner";
+import { get } from "../api";
 
 export default function LoanReservedBookPage() {
 
-    const router = useRouter();
     const [selectedReservation, setSelectedReservation] = useState<any>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [user, setUser] = useState<any>(null);
@@ -61,12 +59,7 @@ export default function LoanReservedBookPage() {
             const token = localStorage.getItem("token");
             if (!token) throw new Error("Token não encontrado");
 
-            const res = await fetch(`${API_ENDPOINTS.reservation}${cpf}`, {
-                method : "GET",
-                headers: {
-                    "Authorization" : `Bearer ${token}`
-                }
-            });
+            const res = await get(`/reservations/users/${cpf}`, token);
 
             if (!res.ok) {
                 const error = await res.json();
@@ -105,11 +98,10 @@ export default function LoanReservedBookPage() {
                     <p>Carregando ...</p>
                 )}
 
-                {/* Verificar se loading é true  ou false */}
                 {!loading && user ? (
                     <>
                         <div className={styles.user}>
-                            <p>Nome: {user.name}</p>
+                            <p><span className={styles.reserveLabel}>Reservas:</span> {user.name}</p>
                             <p>Id: {(user.ID).slice(0,8)}</p>
                         </div>
 
@@ -117,13 +109,11 @@ export default function LoanReservedBookPage() {
                     </>
                 ) : (null)}
 
-
-                {/* Iterar pela lista de reservations */}
                 {!loading && reservations ? (
                     <>
                         <div className={styles.reservationContainer}>
                             {reservations.map((r: any) => (
-                                <ReservedBook
+                                <BookRecordCard
                                     key={r.reservationID}
                                     bookName={r.bookTitle}
                                     bookAuthor={r.authors[0]}

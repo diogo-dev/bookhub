@@ -1,4 +1,5 @@
 import { Loan } from "@/domain/Loan";
+import { LoanBookDTO } from "@/dto/LoanBookDTO";
 import { LoanRepository } from "@/repositories/loanRepository";
 import { Client } from "pg";
 
@@ -72,6 +73,62 @@ export class LoanRepositoryPostgresImpl implements LoanRepository {
         if (result.rows.length === 0) return [];
         return Promise.all(result.rows.map((row) => this.deserialize(row)));
     }
+
+    public async findLoanListByUser(userId: string): Promise<LoanBookDTO[]> {
+            const result = await this.client.query(`
+                SELECT 
+                    l.id AS loan_id,
+                    l.start_at,
+                    l.due_at,
+                    l.item_id,
+                    l.status,
+                    l.code AS loan_code,
+                    bi.status AS item_status,
+                    b.title AS book_title,
+                    b.isbn AS book_isbn,
+                    a.name AS author_name
+                FROM loan l
+                JOIN book_item bi ON bi.id = l.item_id
+                JOIN book b ON b.isbn = bi.isbn
+                LEFT JOIN book_author ba ON ba.book_isbn = b.isbn
+                LEFT JOIN author a ON a.id = ba.author_id
+                WHERE l.user_id = $1
+                ORDER BY l.start_at DESC
+            `, [userId]);
+    
+            if (result.rowCount === 0) {
+                return [];
+            }
+    
+            // Agrupar por reservation_id (porque vem 1 linha por autor)
+            const map = new Map<number, LoanBookDTO>();
+    
+            for (const row of result.rows) {
+                const id = row.loan_id;
+    
+                if (!map.has(id)) {
+                    map.set(id, {
+                        loanID: row.loan_id,
+                        loanCode: row.loan_code,
+                        startAt: row.start_at,
+                        dueAt: row.due_at,
+                        loanStatus: row.status,
+                        itemStatus: row.item_status,
+                        itemID: row.item_id,
+                        bookTitle: row.book_title,
+                        bookIsbn: row.book_isbn,
+                        authors: []
+                    });
+                }
+    
+                // Add autor ao array
+                const entry = map.get(id)!;
+                entry.authors.push(row.author_name);
+            }
+    
+            // Retornar como lista
+            return Array.from(map.values());
+        }
 
     public async findByItemId(itemId: string): Promise<Loan[]> {
         const result = await this.client.query(

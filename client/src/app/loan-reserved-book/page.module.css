@@ -63,3 +63,7 @@
     cursor: not-allowed;
     text-decoration: none;
 }
+
+.reserveLabel {
+    font-weight: 800;
+}

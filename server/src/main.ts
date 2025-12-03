@@ -135,9 +135,35 @@ app.get("/reservations/users/:cpf", authenticateJWT, async (req: Request, res: R
       })
   } catch (error: any) {
       return res.status(400).json({
-        message: error.message || "Erro ao registar usuário"
+        message: error.message || "Erro ao buscar usuário por cpf"
       });
   }
+})
+
+app.get("/loans/users/:cpf", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+      const schema = z.object({
+      cpf: z.string().min(11).max(14)
+    });
+
+    const params = schema.parse(req.params);
+    const user = await usersRepository.findByCpf(params.cpf);
+    if (!user) throw new HttpError(404, "user not found");
+
+    const loans = await loanService.getUserLoansAndBookInfo(user.ID);
+    if (!loans) throw new HttpError(404, "loans not found");
+
+    return res.status(200).json({
+      user,
+      loans
+    })
+  } catch (error: any) {
+      return res.status(400).json({
+        message: error.message || "Erro ao buscar usuário por cpf"
+    });
+
+  }
+  
 })
 
 app.get("/users/id/:id", async (request: Request, response: Response) => {
@@ -336,7 +362,6 @@ app.patch("/loans/:id/return", authenticateJWT, async(req: AuthRequest, res: Res
     });
 
     const params = schema.parse(req.params);
-    const userId = req.user!.sub;
     
     // Buscar empréstimo primeiro para validar propriedade
     const loan = await loanRepository.findById(params.id);
@@ -344,17 +369,12 @@ app.patch("/loans/:id/return", authenticateJWT, async(req: AuthRequest, res: Res
       return res.status(404).json({ message: "Empréstimo não encontrado" });
     }
     
-    // Validar se o empréstimo pertence ao usuário autenticado
-    if (loan.userID !== userId) {
-      return res.status(403).json({ message: "Acesso negado: empréstimo não pertence ao usuário" });
-    }
-    
-    // Agora sim, devolver o empréstimo
-    const returnedLoan = await loanService.returnLoan(params.id);
+    const returnedLoan = await loanService.returnLoanAndItem(params.id);
 
     return res.status(200).json({
       message: "Empréstimo devolvido com sucesso.",
-      loan: returnedLoan
+      loan: returnedLoan.loan,
+      item: returnedLoan.item
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {

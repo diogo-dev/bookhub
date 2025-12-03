@@ -2,13 +2,13 @@
 
 import { ClientLayout } from "@/app/_components/ClientLayout"
 import styles from './page.module.css'
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "../api/endpoints";
+import { useAuth } from "../_context/AuthContext";
 
 
 export default function UserProfile() {
+
+    const { user, loading, isAuthenticated } = useAuth();
 
     const formatCPF = (value: string): string => {
         const numbers = value.replace(/\D/g, '');
@@ -16,45 +16,6 @@ export default function UserProfile() {
         return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/g, '$1.$2.$3-$4')
                 .slice(0, 14); 
     };
-
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const token = localStorage.getItem("token")
-
-        if(!token) {
-            setLoading(false)
-            console.log("Token not found")
-            return
-        }
-
-        const loadUser = async () => {
-            try {
-                const res = await fetch(API_ENDPOINTS.profile, {
-                    method: "GET", 
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (!res.ok) {
-                    const error = await res.json();
-                    throw new Error(error.message || "Erro na resposta dos dados do perfil");
-                }
-
-                const data = await res.json();
-                setUser(data);
-                console.log(data)
-            } catch (error: any) {
-                toast.error(error.message || "Erro ao buscar dados do perfil", {duration: 2000});
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        loadUser();
-    }, []);
 
     if(loading) {
         return (
@@ -64,7 +25,7 @@ export default function UserProfile() {
         );
     }
 
-    if (!user) {
+    if (!isAuthenticated || !user) {
         return (
             <ClientLayout>
                 <p>Usuário não autenticado</p>

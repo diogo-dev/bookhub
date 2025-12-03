@@ -55,6 +55,19 @@ export class ReservationRepositoryPostgresImpl implements ReservationRepository 
         return Promise.all(result.rows.map((row) => this.deserialize(row)));
     }
 
+    public async findActiveByUserId(userId: string): Promise<Reservation[]> {
+
+        const result = await this.client.query(
+            `SELECT r.* FROM reservation r
+            JOIN book_item bi ON bi.id = r.item_id
+            WHERE r.user_id = $1 AND bi.status = 'reservado';`,
+            [userId]
+        );
+
+        if (result.rows.length === 0) return [];
+        return Promise.all(result.rows.map((row) => this.deserialize(row)));
+    }
+
     public async findReservationListByUser(userId: string): Promise<ReservationBookDTO[]> {
         const result = await this.client.query(`
             SELECT 

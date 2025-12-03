@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react";
-import styles from "./ReservedBook.module.css"
+import styles from "./BookRecordCard.module.css"
 
-interface ReservedBookProps {
+interface BookRecordCardProps {
     bookName:string;
     bookAuthor:string;
     bookId: string;
@@ -14,7 +14,7 @@ interface ReservedBookProps {
     onSelect?: () => void;
 }
 
-export function ReservedBook({
+export function BookRecordCard({
     bookName,
     bookAuthor,
     bookId,
@@ -23,7 +23,7 @@ export function ReservedBook({
     end_at,
     isSelected,
     onSelect
-}: ReservedBookProps) {
+}: BookRecordCardProps) {
 
     function formatDateFromBigint(value: string | number): string {
         const date = new Date(Number(value));
