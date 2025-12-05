@@ -6,7 +6,7 @@ export interface BookItemRecord {
   id: string;
   isbn: string;
   created_at: string;
-  status: "disponivel" | "emprestado" | "indisponivel" | "reservado";
+  status: "disponivel" | "emprestado" | "indisponivel" | "reservado" | null;
 }
 
 export class ItemRepositoryPostgresImpl implements ItemRepository {
@@ -25,13 +25,13 @@ export class ItemRepositoryPostgresImpl implements ItemRepository {
 
     if (recordExists) {
       await this.client.query(
-        "UPDATE book_item SET isbn = $2 WHERE id = $1;",
-        [item.ID, item.ISBN]
+        "UPDATE book_item SET isbn = $2, status = $3 WHERE id = $1;",
+        [item.ID, item.ISBN, item.status]
       );
     } else {
       await this.client.query(
-        "INSERT INTO book_item (id, isbn, created_at) VALUES ($1, $2, $3);",
-        [item.ID, item.ISBN, item.createdAt]
+        "INSERT INTO book_item (id, isbn, created_at, status) VALUES ($1, $2, $3, $4);",
+        [item.ID, item.ISBN, item.createdAt, item.status]
       );
     }
   }
@@ -51,6 +51,11 @@ export class ItemRepositoryPostgresImpl implements ItemRepository {
   }
 
   private deserialize(record: BookItemRecord): BookItem {
-    return new BookItem(record.isbn, record.id, Number(record.created_at), record.status);
+    return new BookItem(
+      record.isbn, 
+      record.id, 
+      Number(record.created_at), 
+      (record.status || 'disponivel') as "disponivel" | "emprestado" | "indisponivel" | "reservado"
+    );
   }
 }

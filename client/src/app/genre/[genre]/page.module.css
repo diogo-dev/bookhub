@@ -1,0 +1,250 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: calc(100vh - 200px);
+}
+
+.header {
+  width: 100%;
+  text-align: center;
+  padding: 2rem 0;
+  border-bottom: 3px solid #00033b;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0 0 0.5rem 0;
+  text-transform: capitalize;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Seção de Filtros */
+.filtersSection {
+  width: 100%;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 0.75rem;
+  border: 2px solid #e9ecef;
+  margin-bottom: 2rem;
+}
+
+.filtersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filterLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filterSelect,
+.filterInput {
+  padding: 0.75rem;
+  border: 2px solid #000;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background: white;
+  color: #000;
+  transition: all 0.3s ease;
+}
+
+.filterSelect:focus,
+.filterInput:focus {
+  outline: none;
+  border-color: #00033b;
+  box-shadow: 0 0 0 3px rgba(0, 3, 59, 0.1);
+}
+
+.filterInput::placeholder {
+  color: #999;
+}
+
+.clearFiltersButton {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #dc2626;
+  background: white;
+  color: #dc2626;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+}
+
+.clearFiltersButton:hover {
+  background: #dc2626;
+  color: white;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.125rem;
+  color: #666;
+}
+
+.booksGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+.bookCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: #000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.bookCard:hover {
+  transform: translateY(-4px);
+  background: rgba(0, 3, 59, 0.03);
+}
+
+.bookInfo {
+  width: 100%;
+}
+
+.bookTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+  color: #000;
+}
+
+.bookSubtitle {
+  font-size: 0.8125rem;
+  color: #666;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+}
+
+.bookAuthors {
+  font-size: 0.8125rem;
+  color: #666;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+}
+
+.bookYear {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0;
+  font-weight: 500;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.paginationButton {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #000;
+  background: white;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: #00033b;
+  color: white;
+  border-color: #00033b;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationInfo {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.noResults {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  font-size: 1.125rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .filtersSection {
+    padding: 1rem;
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .clearFiltersButton {
+    margin-top: 0;
+  }
+
+  .booksGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .paginationInfo {
+    order: -1;
+  }
+}
+

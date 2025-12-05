@@ -1,89 +1,409 @@
-.page h1 {
-    margin-bottom: 15px;
+.page {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2.5rem;
+    min-height: calc(100vh - 200px);
 }
 
-.reservationData {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.header {
+    margin-bottom: 3rem;
+    animation: slideInDown 0.5s ease-out;
 }
 
-.reservationData input {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  border: 3px solid #000;
-  background-color: #fff;
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
-  outline: none;
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.reservationData p {
-  font-size: 16px;
-  margin-bottom: 5px;
+.title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 0.75rem 0;
+    position: relative;
+    display: inline-block;
 }
 
-.confirmContainer {
-  margin-top: 30px;
-  border: 3px dashed #000;
+.title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: #00033b;
+    border-radius: 2px;
 }
 
-.confirmContainer div {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  padding: 0px 15px 10px 15px;
+.subtitle {
+    font-size: 1.125rem;
+    color: #666;
+    margin: 0;
+    line-height: 1.6;
 }
 
-.number {
-  margin-right: 60px;
+.searchSection {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.1);
+    animation: slideInUp 0.6s ease-out;
 }
 
-.confirmParagraph {
-  display: flex;
-  justify-content: center;
-  padding: 10px 0px;
-  font-weight: 700;
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.spanTitle {
-  font-weight: 600;
+.inputsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .label {
+    font-size: 0.9375rem;
     font-weight: 500;
+    color: #333;
 }
 
-.separator {
-    border-top: 4px dashed #000;
-    margin: 10px 0;
+.input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #d1d5db;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    box-sizing: border-box;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.input:focus {
+    border-color: #00033b;
+    box-shadow: 0 0 0 3px rgba(0, 3, 59, 0.1);
+}
+
+.searchButton {
+    width: 100%;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background-color: #00033b;
+    color: white;
+    border: 2px solid #00033b;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 3, 59, 0.15);
+}
+
+.searchButton:hover:not(:disabled) {
+    background-color: #0159cb;
+    border-color: #0159cb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(1, 89, 203, 0.35);
+}
+
+.searchButton:disabled {
+    background-color: #9ca3af;
+    border-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+    box-shadow: none;
+}
+
+.spinnerSmall {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f4f6;
+    border-top-color: #00033b;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loadingText {
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+}
+
+.confirmSection {
+    animation: slideInUp 0.8s ease-out;
+}
+
+.confirmCard {
+    background: white;
+    border: 2px solid #d1d5db;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.confirmHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.confirmIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #d1fae5;
+    border-radius: 50%;
+    color: #065f46;
+    flex-shrink: 0;
+}
+
+.confirmTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+}
+
+.confirmData {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.dataRow {
+    display: flex;
+    flex-direction: column;
+}
+
+.dataItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dataLabel {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dataValue {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.dataId {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #00033b;
+    background: #f3f4f6;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-family: 'Courier New', monospace;
+}
+
+.dataName {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #000;
+}
+
+.divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 0.5rem 0;
 }
 
 .button {
-  width: 100%;
-  padding: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  background-color: #fff;
-  border: 3px solid #000;
-  cursor: pointer;
-  font-family: Arial, sans-serif;
-  margin-top: 15px;
-  transition: background-color 0.2s, color 0.2s;
-  text-decoration: underline;
+    width: 100%;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background-color: #00033b;
+    color: white;
+    border: 2px solid #00033b;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 3, 59, 0.15);
 }
 
-.button:hover {
-  background-color: #000;
-  color: #fff;
+.button:hover:not(:disabled) {
+    background-color: #0159cb;
+    border-color: #0159cb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(1, 89, 203, 0.35);
 }
 
 .button:disabled {
-  background-color: #ccc;
-  border-color: #999;
-  color: #666;
-  cursor: not-allowed;
-  text-decoration: none;
+    background-color: #9ca3af;
+    border-color: #9ca3af;
+    color: #fff;
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: 1.5rem 1rem;
+    }
+
+    .header {
+        margin-bottom: 2rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .title::after {
+        width: 50px;
+        height: 3px;
+    }
+
+    .searchSection {
+        padding: 1.5rem;
+    }
+
+    .inputsGrid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .confirmCard {
+        padding: 1.5rem;
+    }
+
+    .confirmHeader {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+
+    .confirmTitle {
+        font-size: 1.25rem;
+    }
+
+    .dataValue {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .page {
+        padding: 1rem 0.75rem;
+    }
+
+    .header {
+        margin-bottom: 1.5rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.9375rem;
+    }
+
+    .title::after {
+        width: 40px;
+        height: 2px;
+    }
+
+    .searchSection {
+        padding: 1rem;
+    }
+
+    .confirmCard {
+        padding: 1.25rem;
+    }
+
+    .confirmIcon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .confirmTitle {
+        font-size: 1.125rem;
+    }
+
+    .dataName {
+        font-size: 1rem;
+    }
 }

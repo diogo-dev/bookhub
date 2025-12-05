@@ -16,12 +16,12 @@ export function Footer() {
           </p>
           <div className={styles.contact}>
             <div>
-              <BsFillTelephoneFill size={13} color="black" />
-              <a className={styles.email} href="mailto:contato.bce@uem.br">contato.bce@uem.br</a>
+              <MdEmail size={16} />
+              <a href="mailto:contato.bce@uem.br">contato.bce@uem.br</a>
             </div>
             <div>
-              <MdEmail size={14} color="black" />
-              <a className={styles.phone} href="tel:+5544912345678">(44) 91234-5678</a>
+              <BsFillTelephoneFill size={16} />
+              <a href="tel:+5544912345678">(44) 91234-5678</a>
             </div>
           </div>
         </div>

@@ -40,6 +40,19 @@ export function patch(route: string, body?: any, token?: string | null) {
   });
 }
 
+export function del(route: string, token?: string | null) {
+  const headers: Record<string, string> = {};
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  return fetch(urlOf(route), {
+    method: "DELETE",
+    headers,
+  });
+}
+
 function urlOf(route: string) {
   const connector = route.startsWith("/") ? "" : "/";
   return process.env.NEXT_PUBLIC_API_URL + connector + route;

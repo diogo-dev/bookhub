@@ -3,9 +3,11 @@ import { client } from "../infra/pg/connection";
 import { Permission } from "../domain/Permission";
 import { Role } from "../domain/Role";
 import { UserAccount } from "../domain/UserAccount";
+import { BookItem } from "../domain/BookItem";
 import { PermissionRepositoryPostgresImpl } from "../repositories/impl/postgres/PermissionRepositoryPostgresImpl";
 import { RoleRepositoryPostgresImpl } from "../repositories/impl/postgres/RoleRepositoryPostgresImpl";
 import { UsersRepositoryPosgresImpl } from "../repositories/impl/postgres/UsersRepositoryPosgresImpl";
+import { ItemRepositoryPostgresImpl } from "../repositories/impl/postgres/ItemRepositoryPostgresImpl";
 import bcrypt from "bcrypt";
 
 const permissionRepository = new PermissionRepositoryPostgresImpl(client);
@@ -159,6 +161,34 @@ async function createTestUsers(roles: Map<string, Role>): Promise<void> {
   }
 }
 
+async function ensureAllBooksHaveItems(): Promise<void> {
+  const itemRepository = new ItemRepositoryPostgresImpl(client);
+  
+  const booksWithoutItems = await client.query(`
+    SELECT b.isbn
+    FROM book b
+    LEFT JOIN book_item bi ON bi.isbn = b.isbn
+    WHERE bi.id IS NULL;
+  `);
+
+  if (booksWithoutItems.rows.length === 0) {
+    return;
+  }
+
+  let added = 0;
+  for (const book of booksWithoutItems.rows) {
+    try {
+      const item = new BookItem(book.isbn);
+      await itemRepository.save(item);
+      added++;
+    } catch (error) {
+      console.error(`Erro ao adicionar item para ${book.isbn}:`, error);
+    }
+  }
+
+  console.log(`${added} itens adicionados para livros sem itens.`);
+}
+
 async function populate() {
   const start = Date.now();
   const progress = setInterval(() => {
@@ -176,11 +206,14 @@ async function populate() {
     
     console.log("\nCarregando dataset de livros...");
     await loadDataset();
+    
+    await ensureAllBooksHaveItems();
+    
     await client.query("REFRESH MATERIALIZED VIEW CONCURRENTLY book_popularity;");
     
     clearInterval(progress);
     
-    console.log("✓ Banco de dados populado com sucesso!");
+    console.log("\nBanco de dados populado com sucesso");
     console.log("\nUsuários de teste criados:");
     console.log("  - user@test.com / 123456 (USER)");
     console.log("  - funcionario@test.com / 123456 (EMPLOYEE)");

@@ -1,19 +1,57 @@
 .cover {
-  display: inline-block;
-  border: 2px solid black;
-  width: 14.8125rem;
-  height: 17.3125rem;
+  display: block;
+  border: 1px solid #d1d5db;
+  width: 18rem;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 237 / 277;
+  object-fit: contain;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+}
+
+.cover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 3, 59, 0.2);
+  border-color: #9ca3af;
 }
 
 .cover.error {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: hsl(0, 0, 85);
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  border-color: #d1d5db;
 }
 
 .cover.error svg {
   width: 3rem;
   height: 3rem;
-  color: hsl(0, 0, 65);
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .cover {
+    width: 12rem;
+    max-width: 100%;
+    border-width: 1px;
+  }
+
+  .cover:hover {
+    transform: translateY(-2px) scale(1.01);
+  }
+}
+
+@media (max-width: 480px) {
+  .cover {
+    width: 10rem;
+    max-width: 100%;
+    border-width: 1px;
+  }
+
+  .cover.error svg {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }

@@ -58,7 +58,7 @@ export async function loadBooks(params: {
         );
 
         for (const itemID of book.items) {
-          bookItems.push(itemID, book.ISBN, Date.now());
+          bookItems.push(itemID, book.ISBN, Date.now(), 'disponivel');
         }
       }
 
@@ -104,13 +104,13 @@ export async function loadBooks(params: {
       );
 
       template = recordsTemplate({
-        numberOfRecords: bookItems.length / 3,
-        sizeOfRecord: 3,
-        casting: ["uuid", "varchar", "bigint"]
+        numberOfRecords: bookItems.length / 4,
+        sizeOfRecord: 4,
+        casting: ["uuid", "varchar", "bigint", "varchar"]
       });
 
       await client.query(
-        `INSERT INTO book_item (id, isbn, created_at) VALUES ${template} ON CONFLICT (id) DO NOTHING;`,
+        `INSERT INTO book_item (id, isbn, created_at, status) VALUES ${template} ON CONFLICT (id) DO NOTHING;`,
         bookItems
       );
 

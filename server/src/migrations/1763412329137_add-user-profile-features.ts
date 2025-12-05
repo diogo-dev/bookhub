@@ -10,6 +10,12 @@ export const up = transaction(async (client: Client) => {
     `);
 
     await client.query(`
+        UPDATE book_item 
+        SET status = 'disponivel' 
+        WHERE status IS NULL;
+    `);
+
+    await client.query(`
         CREATE TABLE user_interest (
         user_id UUID NOT NULL,
         book_isbn VARCHAR(13) NOT NULL,

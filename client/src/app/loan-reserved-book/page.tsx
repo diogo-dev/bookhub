@@ -81,36 +81,59 @@ export default function LoanReservedBookPage() {
     return (
         <EmployeeLayout>
             <div className={styles.page}>
-                <h1>
-                    Empréstimo Reservado
-                </h1>
+                <div className={styles.header}>
+                    <h1 className={styles.title}>
+                        Empréstimo Reservado
+                    </h1>
+                    <p className={styles.subtitle}>
+                        Busque um usuário por CPF para realizar empréstimos de livros já reservados
+                    </p>
+                </div>
 
-                <div className={styles.inputCPF}>
-                    <p className={styles.label}>Buscar Usuário por CPF:</p>
-                    <input 
-                        type="text" 
-                        value={cpf}
-                        onChange={handleCPFChange}
-                    />
+                <div className={styles.searchSection}>
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>Buscar Usuário por CPF:</label>
+                        <input 
+                            type="text" 
+                            value={cpf}
+                            onChange={handleCPFChange}
+                            placeholder="000.000.000-00"
+                            className={styles.input}
+                            maxLength={14}
+                        />
+                    </div>
                 </div>
 
                 {loading && (
-                    <p>Carregando ...</p>
+                    <div className={styles.loadingContainer}>
+                        <div className={styles.spinner}></div>
+                        <p className={styles.loadingText}>Carregando...</p>
+                    </div>
                 )}
 
-                {!loading && user ? (
-                    <>
-                        <div className={styles.user}>
-                            <p><span className={styles.reserveLabel}>Reservas:</span> {user.name}</p>
-                            <p>Id: {(user.ID).slice(0,8)}</p>
+                {!loading && user && (
+                    <div className={styles.userInfo}>
+                        <div className={styles.userCard}>
+                            <div className={styles.userIcon}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div className={styles.userDetails}>
+                                <p className={styles.userName}>
+                                    <span className={styles.userLabel}>Usuário:</span> {user.name}
+                                </p>
+                                <p className={styles.userId}>ID: {user.ID.slice(0, 8)}</p>
+                            </div>
                         </div>
+                    </div>
+                )}
 
-                        <hr className={styles.separator} />
-                    </>
-                ) : (null)}
-
-                {!loading && reservations ? (
-                    <>
+                {!loading && reservations && reservations.length > 0 && (
+                    <div className={styles.reservationsSection}>
+                        <h2 className={styles.sectionTitle}>
+                            Reservas Ativas ({reservations.length})
+                        </h2>
                         <div className={styles.reservationContainer}>
                             {reservations.map((r: any) => (
                                 <BookRecordCard
@@ -121,26 +144,43 @@ export default function LoanReservedBookPage() {
                                     itemId={r.itemID}
                                     start_at={r.startAt}
                                     end_at={r.endAt}
-
                                     isSelected={selectedReservation?.reservationID === r.reservationID}
                                     onSelect={() => setSelectedReservation(r)}
                                 />
                             ))}
                         </div>
+                    </div>
+                )}
 
-                        <hr className={styles.separator} />
-
-                        <div>
-                            <button 
-                                className={styles.button}
-                                onClick={() => setOpen(true)}
-                                disabled={reservations.length === 0 || !selectedReservation}
-                            >
-                                Efetuar Empréstimo
-                            </button>
+                {!loading && reservations && reservations.length === 0 && user && (
+                    <div className={styles.emptyState}>
+                        <div className={styles.emptyIcon}>
+                            <svg width="64" height="64" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 2L12.09 7.26L18 8.27L14 12.14L14.91 18.02L10 15.77L5.09 18.02L6 12.14L2 8.27L7.91 7.26L10 2Z" fill="currentColor" opacity="0.3"/>
+                            </svg>
                         </div>
-                    </>
-                ) : (null)}
+                        <p className={styles.emptyText}>Nenhuma reserva ativa encontrada</p>
+                        <p className={styles.emptySubtext}>Este usuário não possui reservas disponíveis para empréstimo</p>
+                    </div>
+                )}
+
+                {!loading && reservations && reservations.length > 0 && (
+                    <div className={styles.actionSection}>
+                        <button 
+                            className={styles.button}
+                            onClick={() => setOpen(true)}
+                            disabled={!selectedReservation}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+                            </svg>
+                            Efetuar Empréstimo
+                        </button>
+                        {!selectedReservation && (
+                            <p className={styles.hint}>Selecione uma reserva acima para continuar</p>
+                        )}
+                    </div>
+                )}
 
                 {open && user && selectedReservation && (
                     <LoanModal 

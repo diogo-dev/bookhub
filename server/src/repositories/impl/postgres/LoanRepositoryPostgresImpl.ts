@@ -86,6 +86,7 @@ export class LoanRepositoryPostgresImpl implements LoanRepository {
                     bi.status AS item_status,
                     b.title AS book_title,
                     b.isbn AS book_isbn,
+                    b.cover AS book_cover,
                     a.name AS author_name
                 FROM loan l
                 JOIN book_item bi ON bi.id = l.item_id
@@ -100,8 +101,7 @@ export class LoanRepositoryPostgresImpl implements LoanRepository {
                 return [];
             }
     
-            // Agrupar por reservation_id (porque vem 1 linha por autor)
-            const map = new Map<number, LoanBookDTO>();
+            const map = new Map<string, LoanBookDTO>();
     
             for (const row of result.rows) {
                 const id = row.loan_id;
@@ -117,16 +117,17 @@ export class LoanRepositoryPostgresImpl implements LoanRepository {
                         itemID: row.item_id,
                         bookTitle: row.book_title,
                         bookIsbn: row.book_isbn,
+                        bookCover: row.book_cover || undefined,
                         authors: []
                     });
                 }
     
-                // Add autor ao array
                 const entry = map.get(id)!;
-                entry.authors.push(row.author_name);
+                if (row.author_name) {
+                    entry.authors.push(row.author_name);
+                }
             }
     
-            // Retornar como lista
             return Array.from(map.values());
         }
 

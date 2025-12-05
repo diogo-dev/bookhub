@@ -55,8 +55,6 @@ export default async function BookDetails(props: {
   const book: Book = await response.json();
   const items = await itemsResponse.json();
 
-  console.log(items);
-
   return (
     <BookDetailsClient 
       isbn={isbn} 

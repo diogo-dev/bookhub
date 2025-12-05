@@ -69,7 +69,7 @@ export class ReservationRepositoryPostgresImpl implements ReservationRepository 
     }
 
     public async findReservationListByUser(userId: string): Promise<ReservationBookDTO[]> {
-        const result = await this.client.query(`
+        const queryResult = await this.client.query(`
             SELECT 
                 r.id AS reservation_id,
                 r.start_at,
@@ -88,32 +88,34 @@ export class ReservationRepositoryPostgresImpl implements ReservationRepository 
             ORDER BY r.start_at DESC
         `, [userId]);
 
-        if (result.rowCount === 0) {
+        if (queryResult.rowCount === 0) {
             return [];
         }
 
         // Agrupar por reservation_id (porque vem 1 linha por autor)
-        const map = new Map<number, ReservationBookDTO>();
+        const map = new Map<string, ReservationBookDTO>();
 
-        for (const row of result.rows) {
-            const id = row.reservation_id;
+        for (const row of queryResult.rows) {
+            const id = String(row.reservation_id);
 
             if (!map.has(id)) {
                 map.set(id, {
-                    reservationID: row.reservation_id,
-                    startAt: row.start_at,
-                    endAt: row.end_at,
-                    itemStatus: row.item_status,
-                    itemID: row.item_id,
-                    bookTitle: row.book_title,
-                    bookIsbn: row.book_isbn,
+                    reservationID: String(row.reservation_id || ''),
+                    startAt: String(row.start_at || ''),
+                    endAt: String(row.end_at || ''),
+                    itemStatus: row.item_status || 'desconhecido',
+                    itemID: String(row.item_id || ''),
+                    bookTitle: row.book_title || 'Título não disponível',
+                    bookIsbn: row.book_isbn || '',
                     authors: []
                 });
             }
 
-            // Add autor ao array
+            // Add autor ao array (filtrar nulls)
             const entry = map.get(id)!;
-            entry.authors.push(row.author_name);
+            if (row.author_name) {
+                entry.authors.push(row.author_name);
+            }
         }
 
         // Retornar como lista

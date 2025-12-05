@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, cpf: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -94,8 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchUserData(token);
     }
 
+    async function refreshUser() {
+        const token = localStorage.getItem("token");
+        if (token) {
+            await fetchUserData(token);
+        }
+    }
+
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated, loading, login, logout, register }}>
+        <AuthContext.Provider value={{ user, isAuthenticated, loading, login, logout, register, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

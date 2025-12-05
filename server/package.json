@@ -9,6 +9,10 @@
     "migrate:down": "ts-node src/infra/umzug/index.ts down --to 0",
     "migrate:create": "node -e \"const fs=require('fs');fs.writeFileSync(`src/migrations/${Date.now()}_${process.argv[1]}`,'');\"",
     "populate": "ts-node -r tsconfig-paths/register src/scripts/populate_db.ts",
+    "make-books-available": "ts-node -r tsconfig-paths/register src/scripts/make_books_available.ts",
+    "make-all-books-available": "ts-node -r tsconfig-paths/register src/scripts/make_all_books_available.ts",
+    "check-books-items": "ts-node -r tsconfig-paths/register src/scripts/check_books_with_items.ts",
+    "add-items-to-books": "ts-node -r tsconfig-paths/register src/scripts/add_items_to_books_without_items.ts",
     "jwt-key": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
   },
   "devDependencies": {

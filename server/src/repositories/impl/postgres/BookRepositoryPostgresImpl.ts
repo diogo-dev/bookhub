@@ -122,7 +122,8 @@ export class BookRepositoryPostgresImpl implements BookRepository {
           json_build_object(
             'id', bi.id,
             'isbn', bi.isbn,
-            'created_at', bi.created_at
+            'created_at', bi.created_at,
+            'status', COALESCE(bi.status, 'disponivel')
           )
         ) AS obj
         FROM book_item bi
@@ -141,39 +142,169 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     else return this.deserialize(result.rows[0]);
   }
 
-  public async findByText(query: string, limit = 10): Promise<Book[]> {
-    const textSearch = await this.client.query(`
-      SELECT * FROM book
-      WHERE search_vector @@ plainto_tsquery('simple', unaccent($1))
-      ORDER BY ts_rank(search_vector, plainto_tsquery('simple', unaccent($1))) DESC
-      LIMIT $2;`,
-      [query, limit]
-    );
+  private buildBookQuery(whereClause: string, orderClause: string, params: any[]): string {
+    return `
+      SELECT
+        b.isbn,
+        b.work_id,
+        b.title,
+        b.subtitle,
+        b.description,
+        b.cover,
+        b.edition,
+        b.number_of_pages,
+        b.number_of_visits,
+        b.published_at,
+        b.created_at,
 
-    if (textSearch.rows.length > 0) {
-      return textSearch.rows.map((row) => this.deserialize(row));
-    } else {
-      const fuzzySearch = await this.client.query(`
-        SELECT * FROM book
-        WHERE similarity(title, $1) > 0.3
-        ORDER BY similarity(title, $1) DESC
-        LIMIT $2;`,
-        [query, limit]
+        COALESCE(genres.obj, '[]') AS genres,
+        COALESCE(authors.obj, '[]') AS authors,
+        COALESCE(items.obj, '[]') AS items,
+
+        -- Publisher (one-to-many)
+        json_build_object(
+          'name', p.name,
+          'display_name', p.display_name,
+          'created_at', p.created_at
+        ) AS publisher,
+
+        -- Language (one-to-many)
+        json_build_object(
+          'iso_code', l.iso_code,
+          'name', l.name
+        ) AS language,
+
+        -- Category (one-to-many)
+        json_build_object(
+          'id', c.id,
+          'parent_id', c.parent_id,
+          'decimal', c.decimal,
+          'name', c.name,
+          'created_at', c.created_at
+        ) AS category
+
+      FROM book b
+
+      LEFT JOIN publisher p ON p.name = b.publisher_name
+      LEFT JOIN language l ON l.iso_code = b.language_code
+      LEFT JOIN dewey_category c ON c.id = b.category_id
+
+      -- Genres (many-to-many)
+      LEFT JOIN LATERAL (
+        SELECT json_agg(
+          json_build_object(
+            'name', g.name,
+            'display_name', g.display_name
+          )
+        ) AS obj
+        FROM book_genre bg
+        JOIN genre g ON bg.genre = g.name
+        WHERE bg.book_isbn = b.isbn
+      ) genres ON TRUE
+
+      -- Authors (many-to-many)
+      LEFT JOIN LATERAL (
+        SELECT json_agg(
+          json_build_object(
+            'id', a.id,
+            'name', a.name,
+            'biography', a.biography,
+            'birth_date', a.birth_date,
+            'death_date', a.death_date,
+            'created_at', a.created_at
+          )
+        ) AS obj
+        FROM book_author ba
+        JOIN author a ON ba.author_id = a.id
+        WHERE ba.book_isbn = b.isbn
+      ) authors ON TRUE
+
+      -- Book items (one-to-many)
+      LEFT JOIN LATERAL (
+        SELECT json_agg(
+          json_build_object(
+            'id', bi.id,
+            'isbn', bi.isbn,
+            'created_at', bi.created_at,
+            'status', COALESCE(bi.status, 'disponivel')
+          )
+        ) AS obj
+        FROM book_item bi
+        WHERE bi.isbn = b.isbn
+      ) items ON TRUE
+
+      ${whereClause}
+      ${orderClause}`;
+  }
+
+  public async findByText(query: string, limit = 10): Promise<Book[]> {
+    try {
+      try {
+        const textSearchQuery = this.buildBookQuery(
+          `WHERE b.search_vector IS NOT NULL 
+            AND b.search_vector @@ plainto_tsquery('simple', unaccent($1))`,
+          `ORDER BY ts_rank(b.search_vector, plainto_tsquery('simple', unaccent($1))) DESC
+           LIMIT $2`,
+          [query, limit]
+        );
+
+        const textSearch = await this.client.query(textSearchQuery, [query, limit]);
+
+        if (textSearch.rows.length > 0) {
+          return textSearch.rows.map((row) => this.deserialize(row));
+        }
+      } catch (error: any) {
+        console.warn("Full-text search failed, trying alternatives:", error.message);
+      }
+
+      try {
+        const fuzzySearchQuery = this.buildBookQuery(
+          `WHERE similarity(b.title, $1) > 0.3`,
+          `ORDER BY similarity(b.title, $1) DESC
+           LIMIT $2`,
+          [query, limit]
+        );
+
+        const fuzzySearch = await this.client.query(fuzzySearchQuery, [query, limit]);
+
+        if (fuzzySearch.rows.length > 0) {
+          return fuzzySearch.rows.map((row) => this.deserialize(row));
+        }
+      } catch (error: any) {
+        console.warn("Fuzzy search failed, trying simple search:", error.message);
+      }
+
+      const simpleSearchQuery = this.buildBookQuery(
+        `WHERE LOWER(b.title) LIKE LOWER($1)`,
+        `ORDER BY b.title
+         LIMIT $2`,
+        [`%${query}%`, limit]
       );
 
-      return fuzzySearch.rows.map((row) => this.deserialize(row));
+      const simpleSearch = await this.client.query(simpleSearchQuery, [`%${query}%`, limit]);
+
+      if (simpleSearch.rows.length > 0) {
+        return simpleSearch.rows.map((row) => this.deserialize(row));
+      }
+
+      const substringSearchQuery = this.buildBookQuery(
+        `WHERE LOWER(b.title) LIKE LOWER($1) OR LOWER(b.subtitle) LIKE LOWER($1)`,
+        `ORDER BY b.title
+         LIMIT $2`,
+        [`%${query}%`, limit]
+      );
+
+      const substringSearch = await this.client.query(substringSearchQuery, [`%${query}%`, limit]);
+
+      return substringSearch.rows.map((row) => this.deserialize(row));
+    } catch (error: any) {
+      console.error("Error in findByText:", error);
+      return [];
     }
   }
 
   public async listCatalog(options?: { booksPerRow?: number; }) {
-    const booksPerRow = options?.booksPerRow || 8;
-    
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
-    const hourOfDay = now.getHours();
-    const minutes = now.getMinutes();
-    const timeOffset = (dayOfYear * 24 * 12 + hourOfDay * 12 + Math.floor(minutes / 5)) % 100;
+    const booksPerRow = options?.booksPerRow || 20;
 
     const topBooksQuery = await this.client.query(`
       WITH distinct_books AS (
@@ -185,15 +316,11 @@ export class BookRepositoryPostgresImpl implements BookRepository {
       ranked_books AS (
         SELECT *, ROW_NUMBER() OVER (ORDER BY popularity_score DESC) as rn
         FROM distinct_books
-      ),
-      total_count AS (
-        SELECT COUNT(*)::int as cnt FROM ranked_books
       )
       SELECT rb.* FROM ranked_books rb
-      CROSS JOIN total_count tc
-      ORDER BY ((rb.rn - 1 + $1) % GREATEST(tc.cnt, 1)) + 1
-      LIMIT $2;`,
-      [timeOffset, booksPerRow]
+      ORDER BY rb.rn
+      LIMIT $1;`,
+      [booksPerRow]
     );
     
     const topBooks = topBooksQuery.rows.map(book => ({ ...book, ISBN: book.isbn }));
@@ -218,27 +345,90 @@ export class BookRepositoryPostgresImpl implements BookRepository {
         ranked_books AS (
           SELECT *, ROW_NUMBER() OVER (ORDER BY popularity_score DESC) as rn
           FROM distinct_books
-        ),
-        total_count AS (
-          SELECT COUNT(*)::int as cnt FROM ranked_books
         )
         SELECT rb.* FROM ranked_books rb
-        CROSS JOIN total_count tc
-        ORDER BY ((rb.rn - 1 + $2) % GREATEST(tc.cnt, 1)) + 1
-        LIMIT $3;`,
-        [`%${genre}%`, timeOffset, booksPerRow]
+        ORDER BY rb.rn
+        LIMIT $2;`,
+        [`%${genre}%`, booksPerRow]
       );
       return result.rows.map(book => ({ ...book, ISBN: book.isbn }));
     };
 
+    const topGenresQuery = await this.client.query(`
+      SELECT 
+        bg.genre,
+        COUNT(DISTINCT bg.book_isbn) as book_count
+      FROM book_genre bg
+      GROUP BY bg.genre
+      HAVING COUNT(DISTINCT bg.book_isbn) >= 10
+      ORDER BY book_count DESC
+      LIMIT 15;
+    `);
+
+    const topGenres = topGenresQuery.rows.map(row => row.genre);
+
+    const fixedGenres = [
+      { key: 'trends', search: null },
+      { key: 'fiction', search: 'fiction' },
+      { key: 'kids', search: 'juvenile' },
+      { key: 'drama', search: 'drama' },
+      { key: 'humor', search: 'humor' },
+      { key: 'poetry', search: 'poetry' },
+    ];
+
+    const academicGenres = [
+      { key: 'science', search: 'science' },
+      { key: 'history', search: 'history' },
+      { key: 'mathematics', search: 'mathematics' },
+      { key: 'philosophy', search: 'philosophy' },
+      { key: 'education', search: 'education' },
+      { key: 'technology', search: 'technology' },
+      { key: 'medicine', search: 'medicine' },
+      { key: 'law', search: 'law' },
+      { key: 'business', search: 'business' },
+      { key: 'psychology', search: 'psychology' },
+      { key: 'biology', search: 'biology' },
+      { key: 'chemistry', search: 'chemistry' },
+      { key: 'physics', search: 'physics' },
+      { key: 'literature', search: 'literature' },
+      { key: 'art', search: 'art' },
+    ];
+
     const catalog: Record<string, Book[]> = {
       trends: topBooks,
-      fiction: await topBooksBy("fiction"),
-      kids: await topBooksBy("juvenile"),
-      drama: await topBooksBy("drama"),
-      humor: await topBooksBy("humor"),
-      poetry: await topBooksBy("poetry"),
     };
+
+    for (const genre of fixedGenres) {
+      if (genre.search) {
+        const books = await topBooksBy(genre.search);
+        if (books.length > 0) {
+          catalog[genre.key] = books;
+        }
+      }
+    }
+
+    for (const genre of academicGenres) {
+      const books = await topBooksBy(genre.search);
+      if (books.length > 0) {
+        catalog[genre.key] = books;
+      }
+    }
+
+    for (const genreName of topGenres) {
+      const alreadyIncluded = 
+        fixedGenres.some(g => g.search && genreName.toLowerCase().includes(g.search.toLowerCase())) ||
+        academicGenres.some(g => genreName.toLowerCase().includes(g.search.toLowerCase()));
+      
+      if (!alreadyIncluded) {
+        const books = await topBooksBy(genreName);
+        if (books.length > 0) {
+          const normalizedKey = genreName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+          if (!catalog[normalizedKey]) {
+            catalog[normalizedKey] = books;
+          }
+        }
+      }
+    }
 
     return catalog;
   }
@@ -424,12 +614,32 @@ export class BookRepositoryPostgresImpl implements BookRepository {
       const bookItem = new BookItem(
         itemRecord.isbn,
         itemRecord.id,
-        Number(itemRecord.created_at)
+        Number(itemRecord.created_at),
+        (itemRecord.status || 'disponivel') as "disponivel" | "emprestado" | "indisponivel" | "reservado"
       );
 
       book.items.push(bookItem);
     }
 
     return book;
+  }
+
+  public async delete(isbn: string): Promise<void> {
+    try {
+      await this.client.query("BEGIN;");
+      
+      await Promise.all([
+        this.client.query("DELETE FROM book_genre WHERE book_isbn = $1;", [isbn]),
+        this.client.query("DELETE FROM book_author WHERE book_isbn = $1;", [isbn]),
+        this.client.query("DELETE FROM book_item WHERE isbn = $1;", [isbn])
+      ]);
+      
+      await this.client.query("DELETE FROM book WHERE isbn = $1;", [isbn]);
+      
+      await this.client.query("COMMIT;");
+    } catch (error) {
+      await this.client.query("ROLLBACK;");
+      throw error;
+    }
   }
 }

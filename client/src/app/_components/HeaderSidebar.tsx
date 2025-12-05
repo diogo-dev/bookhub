@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FiMenu, FiX, FiBook } from "react-icons/fi";
+import { FiMenu, FiX, FiBook, FiHeart, FiList } from "react-icons/fi";
 import { FaCircleUser } from "react-icons/fa6";
 import styles from "./HeaderSidebar.module.css";
 
@@ -17,16 +17,34 @@ export function HeaderSidebar({ userRoles }: HeaderSidebarProps) {
 
   const getMenuItems = () => {
     const items = [];
+    
+    // Normalizar roles para comparação
+    const normalizedRoles = userRoles.map(role => role.toUpperCase());
+    const isAdmin = normalizedRoles.includes("ADMIN");
+    const isEmployee = normalizedRoles.includes("EMPLOYEE");
+    const isEmployeeOrAdmin = isAdmin || isEmployee;
 
-    if (userRoles.includes("ADMIN")) {
+    if (isEmployeeOrAdmin) {
       items.push(
-        { href: "/admin-profile", label: "Meu Perfil", icon: <FaCircleUser />, roles: ["ADMIN"] },
-        { href: "/manage-book", label: "Gestão de Livros", icon: <FiBook />, roles: ["ADMIN"] },
-        { href: "/return-book", label: "Devolução de Livro", icon: <FiBook />, roles: ["ADMIN"] }
+        { href: "/admin-profile", label: "Meu Perfil", icon: <FaCircleUser /> },
+        { href: "/manage-book", label: "Gestão de Livros", icon: <FiBook /> },
+        { href: "/loan-book", label: "Empréstimo de Livros", icon: <FiBook /> },
+        { href: "/return-book", label: "Devolução de Livro", icon: <FiBook /> },
+        { href: "/user-query", label: "Consulta de Usuários", icon: <FaCircleUser /> }
       );
+      
+      // Apenas admin vê gestão de funcionários
+      if (isAdmin) {
+        items.push(
+          { href: "/manage-employees", label: "Gestão de Funcionários", icon: <FaCircleUser /> }
+        );
+      }
     } else {
+      // Usuário comum
       items.push(
-        { href: "/user-profile", label: "Meu Perfil", icon: <FaCircleUser />, roles: ["USER"] }
+        { href: "/user-profile", label: "Meu Perfil", icon: <FaCircleUser /> },
+        { href: "/interests", label: "Lista de interesses", icon: <FiHeart /> },
+        { href: "/loans", label: "Histórico de empréstimos", icon: <FiList /> }
       );
     }
 

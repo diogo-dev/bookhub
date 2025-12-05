@@ -71,82 +71,137 @@ export function ReturnModal({ selectedLoan, onClose }: ReserveModalProps) {
         }
     };
 
+  const isOverdue = Number(selectedLoan.dueAt) < Date.now();
+  const delay = handleDelay(selectedLoan.dueAt);
+
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {step === 'form' ? (
           <div className={styles.content}>
-                <button onClick={onClose} className={styles.closeButton}>
-                ×
-                </button>
+            <button onClick={onClose} className={styles.closeButton} aria-label="Fechar">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
 
-                <h2 className={styles.title}>Devolução</h2>
-
-                <p className={styles.description}>
-                    Confirme os dados do empréstimo abaixo para prosseguir com a devolução
-                </p>
-
-                <hr className={styles.separator} />
-
-                <div className={styles.loanDetails}>
-                    <div className={styles.detailRow}>
-                        <span className={styles.label}>Código do empréstimo:</span>
-                        <span className={styles.value}>{selectedLoan.loanCode}</span>
-                    </div>
-                    <div className={styles.detailRow}>
-                        <span className={styles.label}>Status do empréstimo:</span>
-                        <span className={styles.value}>{selectedLoan.loanStatus.toUpperCase()}</span>
-                    </div>
-                    <div className={styles.detailRow}>
-                        <span className={styles.label}>Título:</span>
-                        <span className={styles.value}>{selectedLoan.bookTitle}</span>
-                    </div>
-                    <div className={styles.detailRow}>
-                        <span className={styles.label}>ISBN:</span>
-                        <span className={styles.value}>{selectedLoan.bookIsbn}</span>
-                    </div>
-                    <div className={styles.detailRow}>
-                        <span className={styles.label}>Atraso:</span>
-                        <span className={styles.value}>{handleDelay(selectedLoan.dueAt)}</span>
-                    </div>
-                </div>
-
-                <button onClick={handleSubmit} className={styles.confirmButton}>
-                    Confirmar
-                </button>
+            <div className={styles.header}>
+              <div className={styles.iconContainer}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/>
+                </svg>
+              </div>
+              <h2 className={styles.title}>Confirmar Devolução</h2>
+              <p className={styles.description}>
+                Confirme os dados do empréstimo abaixo para prosseguir com a devolução
+              </p>
             </div>
+
+            <div className={styles.loanDetails}>
+              <div className={styles.detailCard}>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Código do Empréstimo:</span>
+                  <span className={styles.value}>{selectedLoan.loanCode}</span>
+                </div>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Status:</span>
+                  <span className={`${styles.statusBadge} ${styles.statusActive}`}>
+                    {selectedLoan.loanStatus.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.detailCard}>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Título do Livro:</span>
+                  <span className={styles.value}>{selectedLoan.bookTitle}</span>
+                </div>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>ISBN:</span>
+                  <span className={styles.value}>{selectedLoan.bookIsbn}</span>
+                </div>
+                {selectedLoan.authors && selectedLoan.authors.length > 0 && (
+                  <div className={styles.detailRow}>
+                    <span className={styles.label}>Autor(es):</span>
+                    <span className={styles.value}>{selectedLoan.authors.filter(a => a).join(', ')}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={`${styles.detailCard} ${isOverdue ? styles.overdueCard : ''}`}>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Atraso:</span>
+                  <span className={`${styles.value} ${isOverdue ? styles.overdueValue : styles.onTime}`}>
+                    {isOverdue ? (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', marginRight: '4px' }}>
+                          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+                        </svg>
+                        {delay}
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline-block', marginRight: '4px' }}>
+                          <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/>
+                        </svg>
+                        No prazo
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={handleSubmit} className={styles.confirmButton}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/>
+              </svg>
+              Confirmar Devolução
+            </button>
+          </div>
         ) : (
           <div className={styles.successContent}>
-            <button onClick={onClose} className={styles.closeButton}>
-              ×
+            <button onClick={onClose} className={styles.closeButton} aria-label="Fechar">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
 
             <div className={styles.checkmarkCircle}>
-              <svg width="40" height="30" viewBox="0 0 40 30" fill="none">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path 
-                  d="M2 15L15 28L38 2" 
+                  d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" 
                   stroke="currentColor" 
-                  strokeWidth="4" 
+                  strokeWidth="3" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"
                 />
               </svg>
             </div>
 
-            <h2 className={styles.successTitle}>Devolução bem sucedida!</h2>
+            <h2 className={styles.successTitle}>Devolução Realizada com Sucesso!</h2>
+            <p className={styles.successDescription}>
+              O livro foi devolvido e o exemplar está disponível novamente.
+            </p>
 
             <div className={styles.loanDetails}>
-              <div className={styles.detailRow}>
-                  <span className={styles.label}>Código do empréstimo:</span>
-                  <span className={styles.value}>{returnedLoan.code}</span>
-              </div>
-              <div className={styles.detailRow}>
-                  <span className={styles.label}>Status do empréstimo:</span>
-                  <span className={styles.value}>{returnedLoan.status.toUpperCase()}</span>
-              </div>
-              <div className={styles.detailRow}>
-                  <span className={styles.label}>Status do exemplar:</span>
-                  <span className={styles.value}>{returnedItem.status.toUpperCase()}</span>
+              <div className={styles.detailCard}>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Código do Empréstimo:</span>
+                  <span className={styles.value}>{returnedLoan?.code || selectedLoan.loanCode}</span>
+                </div>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Status do Empréstimo:</span>
+                  <span className={`${styles.statusBadge} ${styles.statusReturned}`}>
+                    {returnedLoan?.status?.toUpperCase() || 'DEVOLVIDO'}
+                  </span>
+                </div>
+                <div className={styles.detailRow}>
+                  <span className={styles.label}>Status do Exemplar:</span>
+                  <span className={`${styles.statusBadge} ${styles.statusAvailable}`}>
+                    {returnedItem?.status?.toUpperCase() || 'DISPONÍVEL'}
+                  </span>
+                </div>
               </div>
             </div>
 

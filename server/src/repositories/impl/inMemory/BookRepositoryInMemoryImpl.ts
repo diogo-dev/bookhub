@@ -40,4 +40,8 @@ export class BookRepositoryInMemoryImpl implements BookRepository {
   public async save(book: Book): Promise<void> {
     this.books.set(book.ISBN, book);
   }
+
+  public async delete(isbn: string): Promise<void> {
+    this.books.delete(isbn);
+  }
 }

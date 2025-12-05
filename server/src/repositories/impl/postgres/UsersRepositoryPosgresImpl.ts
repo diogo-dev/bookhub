@@ -2,6 +2,7 @@ import { UserAccount } from "@/domain/UserAccount";
 import { Role } from "@/domain/Role";
 import { Permission } from "@/domain/Permission";
 import { UsersRepository } from "@/repositories/UsersRepository";
+import { RoleRepositoryPostgresImpl } from "@/repositories/impl/postgres/RoleRepositoryPostgresImpl";
 import { Client } from "pg";
 
 export interface UsersRecord {
@@ -178,6 +179,53 @@ export class UsersRepositoryPosgresImpl implements UsersRepository {
         return updateUser;
     }
     
+    public async findAll(): Promise<UserAccount[]> {
+        const result = await this.client.query(
+            "SELECT * FROM users ORDER BY created_at DESC;"
+        );
+
+        const users: UserAccount[] = [];
+        for (const row of result.rows) {
+            users.push(await this.deserialize(row));
+        }
+
+        return users;
+    }
+
+    public async updateRoles(userId: string, roleNames: string[]): Promise<UserAccount> {
+        const roleRepository = new RoleRepositoryPostgresImpl(this.client);
+
+        await this.client.query("BEGIN;");
+        try {
+            // Remover todas as roles atuais
+            await this.client.query(
+                `DELETE FROM user_role WHERE user_id = $1;`,
+                [userId]
+            );
+
+            // Adicionar as novas roles
+            for (const roleName of roleNames) {
+                const role = await roleRepository.getRoleByName(roleName);
+                if (!role) throw new Error(`Role '${roleName}' not found`);
+                
+                await this.client.query(
+                    `INSERT INTO user_role (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING;`,
+                    [userId, role.ID]
+                );
+            }
+
+            await this.client.query("COMMIT;");
+        } catch (error) {
+            await this.client.query("ROLLBACK;");
+            throw error;
+        }
+
+        const updatedUser = await this.findById(userId);
+        if (!updatedUser) throw new Error('User not found after role update');
+        
+        return updatedUser;
+    }
+
     public async deleteById(userId: string): Promise<void> {
 
         const result = await this.client.query(

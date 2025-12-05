@@ -1,5 +1,5 @@
 export interface ReservationBookDTO {
-    reservationID: number;
+    reservationID: string;
     startAt: string;
     endAt: string;
     itemStatus: string;

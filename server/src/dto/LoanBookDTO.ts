@@ -8,5 +8,6 @@ export interface LoanBookDTO {
     itemID: string;
     bookTitle: string;
     bookIsbn: string;
+    bookCover?: string;
     authors: string[];
 }

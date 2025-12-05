@@ -14,3 +14,22 @@ body {
   overflow-x: hidden;
   background: hsl(0, 0, 98);
 }
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}

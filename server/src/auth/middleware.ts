@@ -25,8 +25,9 @@ export function authorizeRoles(...allowedRoles: string[]) {
     }
 
     const normalize = (s: string) => s.toUpperCase();
+    const normalizedAllowedRoles = allowedRoles.map(normalize);
     const userRoles = req.user.roles?.map((r: any) => (typeof r === "string" ? r : r.name)).map(normalize) || [];
-    const hasPermission = allowedRoles.every(role => userRoles.includes(role));
+    const hasPermission = normalizedAllowedRoles.some(role => userRoles.includes(role));
 
     if (!hasPermission) {
       return res.status(403).json({ message: "Acesso negado: permissão insuficiente" });

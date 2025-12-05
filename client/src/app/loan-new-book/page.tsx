@@ -98,77 +98,122 @@ export default function LoanNewBookPage() {
     return (
         <EmployeeLayout>
             <div className={styles.page}>
-                <h1>
-                    Novo Empréstimo
-                </h1>
-
-                <div className={styles.reservationData}>
-                    <div>
-                        <div className={styles.label}>
-                            <p>CPF do usuário:</p>
-                        </div>
-                        <input 
-                            type="text" 
-                            value={cpf}
-                            onChange={handleCPFChange}
-                            required
-                        />
-                    </div>
-                    
-
-                    <div>
-                        <div className={styles.label}>
-                            <p>ID do livro:</p>
-                        </div>
-                        <input 
-                            type="text" 
-                            value={isbn} 
-                            onChange={handleISBNChange}
-                            required
-                        />
-                    </div>
+                <div className={styles.header}>
+                    <h1 className={styles.title}>
+                        Novo Empréstimo
+                    </h1>
+                    <p className={styles.subtitle}>
+                        Crie um novo empréstimo informando o CPF do usuário e o ISBN do livro
+                    </p>
                 </div>
 
-                <div>
+                <div className={styles.searchSection}>
+                    <div className={styles.inputsGrid}>
+                        <div className={styles.inputGroup}>
+                            <label className={styles.label}>CPF do Usuário:</label>
+                            <input 
+                                type="text" 
+                                value={cpf}
+                                onChange={handleCPFChange}
+                                placeholder="000.000.000-00"
+                                className={styles.input}
+                                maxLength={14}
+                                required
+                            />
+                        </div>
+
+                        <div className={styles.inputGroup}>
+                            <label className={styles.label}>ISBN do Livro:</label>
+                            <input 
+                                type="text" 
+                                value={isbn} 
+                                onChange={handleISBNChange}
+                                placeholder="Digite o ISBN"
+                                className={styles.input}
+                                required
+                            />
+                        </div>
+                    </div>
+
                     {!changeButton ? (
                         <button 
-                            className={styles.button}
+                            className={styles.searchButton}
                             onClick={handleSearchButtonClick}
+                            disabled={rawCpf.length !== 11 || isbn.length < 8 || loading}
                         >
-                            Buscar por exemplar
+                            {loading ? (
+                                <>
+                                    <div className={styles.spinnerSmall}></div>
+                                    Buscando...
+                                </>
+                            ) : (
+                                <>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="currentColor"/>
+                                    </svg>
+                                    Buscar Exemplar
+                                </>
+                            )}
                         </button>
-                    ) : (
-                        <>
-                            {user && selectedItem && (
-                                <div className={styles.confirmContainer}>
-                                    <p className={styles.confirmParagraph}>Confirmar dados</p>  
+                    ) : null}
+                </div>
 
-                                    <div className={styles.confirmData}>
-                                        <p>
-                                            <span className={styles.spanTitle}>Usuário:</span>
-                                            <span className={styles.number}>{user.ID.slice(0, 6)}</span>
-                                            <span>{user.name}</span>
-                                        </p>
+                {loading && (
+                    <div className={styles.loadingContainer}>
+                        <div className={styles.spinner}></div>
+                        <p className={styles.loadingText}>Carregando informações...</p>
+                    </div>
+                )}
 
-                                        <p>
-                                            <span className={styles.spanTitle}>Exemplar:</span>
-                                            <span className={styles.number}>{selectedItem.ID.slice(0, 6)}</span>
-                                            <span>{book?.title}</span>
-                                        </p>
+                {!loading && changeButton && user && selectedItem && book && (
+                    <div className={styles.confirmSection}>
+                        <div className={styles.confirmCard}>
+                            <div className={styles.confirmHeader}>
+                                <div className={styles.confirmIcon}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <h2 className={styles.confirmTitle}>Confirmar Dados do Empréstimo</h2>
+                            </div>
+
+                            <div className={styles.confirmData}>
+                                <div className={styles.dataRow}>
+                                    <div className={styles.dataItem}>
+                                        <span className={styles.dataLabel}>Usuário:</span>
+                                        <div className={styles.dataValue}>
+                                            <span className={styles.dataId}>{user.ID.slice(0, 8)}</span>
+                                            <span className={styles.dataName}>{user.name}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            )}
 
-                            <button 
-                                className={styles.button}
-                                onClick={() => setOpen(true)}
-                                disabled={!user || !selectedItem}
-                            >
-                                Efetuar Empréstimo
-                            </button>
-                        </>
-                    )}
-                </div>
+                                <div className={styles.divider}></div>
+
+                                <div className={styles.dataRow}>
+                                    <div className={styles.dataItem}>
+                                        <span className={styles.dataLabel}>Exemplar:</span>
+                                        <div className={styles.dataValue}>
+                                            <span className={styles.dataId}>{selectedItem.ID.slice(0, 8)}</span>
+                                            <span className={styles.dataName}>{book.title}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button 
+                            className={styles.button}
+                            onClick={() => setOpen(true)}
+                            disabled={!user || !selectedItem}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+                            </svg>
+                            Efetuar Empréstimo
+                        </button>
+                    </div>
+                )}
 
                 {open && user && selectedItem && (
                     <LoanModal 

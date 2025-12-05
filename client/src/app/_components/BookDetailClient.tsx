@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { use, useState } from "react";
+import { useState, useEffect } from "react";
 import { ReserveModal } from "@/app/_components/ReserveModal";
 import { BookCover } from "@/app/_components/BookCover";
 import { Expand } from "@/app/_components/Expand";
 import { useAuth } from "../_context/AuthContext";
+import { get, post, del } from "@/app/api";
+import { toast } from "sonner";
+import { MdArrowBack } from "react-icons/md";
 
 import styles from "./BookDetailClient.module.css";
 
@@ -54,24 +57,106 @@ interface BookDetailsClientProps {
 
 export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps) {
   const [open, setOpen] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [checkingWishlist, setCheckingWishlist] = useState(true);
   const { isAuthenticated } = useAuth();
 
-  // Verifica se há algum item disponível para reserva
   const availableItem = items.find(item => item.status === "disponivel");
 
+  useEffect(() => {
+    async function checkWishlist() {
+      if (!isAuthenticated) {
+        setCheckingWishlist(false);
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await get('/me/interests', token);
+        
+        if (response.ok) {
+          const interests = await response.json();
+          const hasBook = interests.some((interest: any) => interest.bookISBN === isbn);
+          setIsInWishlist(hasBook);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar wishlist:', error);
+      } finally {
+        setCheckingWishlist(false);
+      }
+    }
+    
+    checkWishlist();
+  }, [isbn, isAuthenticated]);
+
+  async function handleWishlistToggle() {
+    if (!isAuthenticated) {
+      toast.error("Faça login para adicionar à wishlist");
+      return;
+    }
+
+    setWishlistLoading(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      if (isInWishlist) {
+        const response = await del(`/me/interests/${isbn}`, token);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          toast.error(errorData.message || 'Erro ao remover da wishlist.');
+          return;
+        }
+        
+        setIsInWishlist(false);
+        toast.success("Livro removido da wishlist");
+      } else {
+        const response = await post('/me/interests', { bookISBN: isbn }, token);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          toast.error(errorData.message || 'Erro ao adicionar à wishlist.');
+          return;
+        }
+        
+        setIsInWishlist(true);
+        toast.success("Livro adicionado à wishlist");
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar wishlist:', error);
+      toast.error('Erro ao atualizar wishlist.');
+    } finally {
+      setWishlistLoading(false);
+    }
+  }
+
   let reserveDisabled = false;
-  let reserveLabel = "Reserve";
+  let reserveLabel = "Reservar";
   if (!isAuthenticated) {
     reserveDisabled = true;
-    reserveLabel = "Login to reserve";
+    reserveLabel = "Faça login para reservar";
   } else if (!availableItem) {
     reserveDisabled = true;
-    reserveLabel = "No items available";
+    reserveLabel = "Nenhum exemplar disponível";
+  }
+
+  let wishlistLabel = "Adicionar à wishlist";
+  let wishlistDisabled = false;
+  
+  if (!isAuthenticated) {
+    wishlistLabel = "Faça login para adicionar à wishlist";
+    wishlistDisabled = true;
+  } else if (isInWishlist) {
+    wishlistLabel = "Remover da wishlist";
   }
 
   return (
     <div className={styles.container}>
-      <Link href="/">Back to homepage</Link>
+      <Link href="/" className={styles.backLink}>
+        <MdArrowBack size={20} />
+        <span>Voltar à página inicial</span>
+      </Link>
       <div className={styles.content}>
         <div>
           <BookCover coverID={book.cover} />
@@ -84,7 +169,13 @@ export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps)
           > 
             {reserveLabel}
           </button>
-          <button>Add to wishlist</button>
+          <button 
+            className={styles.btnSecondary}
+            onClick={handleWishlistToggle}
+            disabled={wishlistDisabled || wishlistLoading || checkingWishlist}
+          >
+            {checkingWishlist ? "Verificando..." : wishlistLabel}
+          </button>
         </div>
         <div>
           <Expand className={styles.subject} maxHeight={280}>
@@ -151,8 +242,6 @@ export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps)
           onClose={() => setOpen(false)}
         />
       )}
-
-      {/* Caso o usuário também não estiver autenticado, desabilitar botões */}
 
     </div>
   );
