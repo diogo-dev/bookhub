@@ -10,20 +10,19 @@
 
 .backLink {
   display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
   margin-bottom: 1.5rem;
-  font-size: 0.9375rem;
+  margin-top: 1rem;
+  font-size: 0.6rem;
   color: #00033b;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 0.625rem 1rem;
+  padding: 0.3rem 0.8rem;
   border: 1.5px solid #00033b;
   border-radius: 0.5rem;
   background: white;
   width: max-content;
-  margin-left: 1rem;
+  margin-left: 7rem;
 }
 
 .backLink:hover {

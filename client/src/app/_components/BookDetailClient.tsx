@@ -63,6 +63,7 @@ export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps)
   const { isAuthenticated } = useAuth();
 
   const availableItem = items.find(item => item.status === "disponivel");
+  const availableCount = items.filter(item => item.status === "disponivel").length;
 
   useEffect(() => {
     async function checkWishlist() {
@@ -155,7 +156,6 @@ export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps)
     <div className={styles.container}>
       <Link href="/" className={styles.backLink}>
         <MdArrowBack size={20} />
-        <span>Voltar à página inicial</span>
       </Link>
       <div className={styles.content}>
         <div>
@@ -230,6 +230,11 @@ export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps)
               <li className={styles.property}>
                 <b id="pages-label">Number of pages:</b>
                 <span aria-labelledby="pages-label"> {book.numberOfPages}</span>
+              </li>
+
+              <li className={styles.property}>
+                <b id="available-label">Available copies:</b>
+                <span aria-labelledby="available-label"> {availableCount}</span>
               </li>
             </ul>
           </div>

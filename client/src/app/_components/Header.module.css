@@ -93,7 +93,7 @@
 }
 
 .loginButton {
-  background: #0159cb;
+  background: rgba(1, 119, 203, 0.637);
   border-radius: 0.5rem;
   padding: 0.625rem 1.5rem;
   cursor: pointer;
