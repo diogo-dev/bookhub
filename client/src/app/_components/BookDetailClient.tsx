@@ -206,14 +206,14 @@ export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps)
 
               {book.edition &&
                 <li className={styles.property}>
-                  <b id="edition-label">Edition:</b>
+                  <b id="edition-label">Edição:</b>
                   <span aria-labelledby="edition-label"> {book.edition}</span>
                 </li>
               }
 
               {book.publisher &&
                 <li className={styles.property}>
-                  <b id="publisher-label">Publisher:</b>
+                  <b id="publisher-label">Editora:</b>
                   <span aria-labelledby="publisher-label"> {book.publisher.displayName}</span>
                 </li>
               }
@@ -221,19 +221,19 @@ export function BookDetailsClient({ isbn, book, items }: BookDetailsClientProps)
             <ul className={styles.column}>
               {book.language &&
                 <li className={styles.property}>
-                  <b id="language-label">Language:</b>
+                  <b id="language-label">Idioma:</b>
                   <span aria-labelledby="language-label"> {book.language.name} ({book.language.isoCode})</span>
                 </li>
               }
 
 
               <li className={styles.property}>
-                <b id="pages-label">Number of pages:</b>
+                <b id="pages-label">Número de páginas:</b>
                 <span aria-labelledby="pages-label"> {book.numberOfPages}</span>
               </li>
 
               <li className={styles.property}>
-                <b id="available-label">Available copies:</b>
+                <b id="available-label">Cópias disponíveis:</b>
                 <span aria-labelledby="available-label"> {availableCount}</span>
               </li>
             </ul>
