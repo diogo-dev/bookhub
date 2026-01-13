@@ -1,5 +1,16 @@
 # BookHub
 
+**BookHub** is a library management system where regular users (readers) can:
+- Search for books  
+- Reserve books  
+- Add and remove books from their wishlist  
+
+Library staff members (system administrators) are responsible for managing:
+- Book loans and returns for reserved books  
+- Book loans and returns for non-reserved books  
+- Book management (create, remove, and edit books)  
+- User and staff profile management  
+
 ## Pre-requisites
 
 Install the following techs
