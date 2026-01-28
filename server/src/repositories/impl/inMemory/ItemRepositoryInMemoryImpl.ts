@@ -15,4 +15,8 @@ export class ItemRepositoryInMemoryImpl implements ItemRepository {
   public async save(item: BookItem): Promise<void> {
     this.items.set(item.ID, item);
   }
+
+  updateStatus(itemId: string, status: "disponivel" | "emprestado" | "indisponivel" | "reservado"): Promise<BookItem> {
+    throw new Error("Method not implemented.");
+  }
 }
