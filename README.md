@@ -1,14 +1,14 @@
 # BookHub
 
 **BookHub** is a library management system where regular users (readers) can:
-- Search for books  
-- Reserve books  
-- Add and remove books from their wishlist  
+- Search for books
+- Reserve books
+- Add and remove books from their wishlist
 
 Library staff members (system administrators) are responsible for managing:
-- Book loans and returns for reserved books  
-- Book loans and returns for non-reserved books  
-- Book management (create, remove, and edit books)  
+- Book loans and returns for reserved books
+- Book loans and returns for non-reserved books
+- Book management (create, remove, and edit books)
 - User and staff profile management
 
 ## Understanding the System
@@ -86,7 +86,7 @@ The following steps describe the process the librarian must perform:
   </td>
 </table>
 
-3) Once the librarian enters the user's CPF (SSN) number, the reservations is displayed. Now, by clicking on the reservation card, the loan button ("Efetuar Empréstimo") will be enabled. 
+3) Once the librarian enters the user's CPF (SSN) number, the reservations is displayed. Now, by clicking on the reservation card, the loan button ("Efetuar Empréstimo") will be enabled.
 
 <table align="center">
   <td align="center">
@@ -152,7 +152,7 @@ The `server/` folder contains the following content:
 - SQL migrations on `migrations/`
 - Domain entities on `entities/`
 - In-memory and persistent repositories on `repositories/`
-- HTTP endpoints on `main.ts`
+- HTTP endpoints on `index.ts`
 
 The `client/` folder contains the following content:
 
