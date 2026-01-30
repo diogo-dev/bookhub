@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {"@/*": ["./src/*"]},
     "rootDir": "src",
     "outDir": "dist",
     "module": "nodenext",
@@ -15,7 +17,6 @@
     "strictPropertyInitialization": false,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-    "paths": {"@/*": ["./src/*"]}
+    "skipLibCheck": true
   }
 }

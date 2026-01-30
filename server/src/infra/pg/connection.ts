@@ -1,12 +1,15 @@
-import "dotenv/config";
-import { Client } from "pg";
+import 'dotenv/config';
+import { Client } from 'pg';
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 client.connect()
-  .then(() => console.log("Connected to database.\n"))
-  .catch(error => console.log("Connection failed.\n", error));
+  .then(() => console.log('Connected to database.\n'))
+  .catch(error => console.error('Connection failed.\n', error));
 
 export { client };

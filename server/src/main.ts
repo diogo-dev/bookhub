@@ -1,3 +1,4 @@
+import 'tsconfig-paths/register';
 import "dotenv/config";
 import z from "zod";
 import cors from "cors";
@@ -1649,4 +1650,9 @@ app.use("/", (error: Error, request: Request, response: Response, next: Function
   response.status(code).json({ message, body });
 });
 
-app.listen(4000, () => console.log("server is running on port", 4000));
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, () => console.log(`server is running on port ${PORT}`));
+}
+
+export default app;
