@@ -3,6 +3,7 @@ import { ReservationRepository } from "@/repositories/ReservationRepository";
 import { Client } from "pg";
 import { LoanRepository } from "@/repositories/loanRepository";
 import { Reservation } from "@/domain/Reservation";
+import { HttpError } from "@/errors/HttpError";
 import { Loan } from "@/domain/Loan";
 import { LoanBookDTO } from "@/dto/LoanBookDTO";
 import { BookItem } from "@/domain/BookItem";
@@ -15,57 +16,26 @@ export class LoanService {
         private client: Client
     ) {}
 
-    async createReservation(userID: string, itemID: string, startAt: number, endAt: number): Promise<Reservation> {
-
-        // talvez não deixar o usuário fazer mais de uma reserva ativa para o mesmo exemplar
-        const activeReservations = await this.reservationRepository.findActiveByUserId(userID);
-        const now = Date.now();
-        const hasActiveReservation = activeReservations.some(r => r.startAt <= now && r.endAt >= now);
-        console.log({hasActiveReservation});
-        if (hasActiveReservation) throw new Error("Reserva ativa, compareça na loja para pegar o exemplar");
-
-        await this.client.query("BEGIN;");
-        try { 
-            const reservation = new Reservation(
-                crypto.randomUUID(),
-                "",
-                userID,
-                itemID,
-                startAt,
-                endAt,
-                Date.now()
-            )
-
-            await this.reservationRepository.save(reservation);
-            await this.itemRepository.updateStatus(itemID, "reservado");
-            await this.client.query("COMMIT;");
-            return reservation;
-        } catch (error) { 
-            await this.client.query("ROLLBACK;");
-            throw error;
-        }
-    }
-
     async createLoan(userID: string, itemID: string, startAt: number, dueAt: number, reservationID?: string): Promise<Loan> {
         const item = await this.itemRepository.find(itemID);
-        if (!item) throw new Error("Item not found");
+        if (!item) throw new HttpError(404, "Item not found");
 
         let reservation: Reservation | null = null;
         if (reservationID) {
             reservation = await this.reservationRepository.findById(reservationID);
-            if (!reservation) throw new Error("Reserva não encontrada");
-            if (reservation.userID !== userID) throw new Error("Reserva não pertence ao usuário");
-            if (reservation.itemID !== itemID) throw new Error("Reserva não pertence a este item");
+            if (!reservation) throw new HttpError(404, "Reserva não encontrada");
+            if (reservation.userID !== userID) throw new HttpError(400, "Reserva não pertence ao usuário");
+            if (reservation.itemID !== itemID) throw new HttpError(400, "Reserva não pertence a este item");
         }
 
         const itemStatus = await this.getItemStatus(itemID);
-        if (itemStatus === "emprestado") throw new Error("Exemplar já está emprestado");
+        if (itemStatus === "emprestado") throw new HttpError(400, "Exemplar já está emprestado");
 
         const activeLoans = await this.loanRepository.findByUserIdAndBookIsbn(userID, item.ISBN);
         const hasActiveLoan = activeLoans.some(
             l => l.status === 'ativo' && !l.returnedAt
         );
-        if (hasActiveLoan) throw new Error("Exemplar já está emprestado para este usuário");
+        if (hasActiveLoan) throw new HttpError(400, "Exemplar já está emprestado para este usuário");
 
         await this.client.query("BEGIN;");
         try { 
@@ -94,9 +64,9 @@ export class LoanService {
 
     async returnLoanAndItem(loanID: string): Promise<{loan: Loan, item: BookItem}> {
         const loan = await this.loanRepository.findById(loanID);
-        if (!loan) throw new Error("Empréstimo não encontrado");
-        if (loan.status !== "ativo") throw new Error("Empréstimo não ativo");
-        if (loan.returnedAt) throw new Error("Empréstimo já devolvido");
+        if (!loan) throw new HttpError(404, "Empréstimo não encontrado");
+        if (loan.status !== "ativo") throw new HttpError(400, "Empréstimo não ativo");
+        if (loan.returnedAt) throw new HttpError(400, "Empréstimo já devolvido");
 
         await this.client.query("BEGIN;");
         try { 
@@ -124,7 +94,7 @@ export class LoanService {
             "SELECT status FROM book_item WHERE id = $1;",
             [itemID]
         );
-        if (result.rows.length === 0) throw new Error("Exemplar não encontrado");
+        if (result.rows.length === 0) throw new HttpError(404, "Exemplar não encontrado");
         return result.rows[0].status as "disponivel" | "emprestado" | "indisponivel" | "reservado";
     }
 }

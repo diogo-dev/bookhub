@@ -21,6 +21,11 @@ export class CategoryRepositoryPostgresImpl implements CategoryRepository {
     else return this.deserialize(result.rows[0]);
   }
 
+  public async findAll(): Promise<DeweyCategory[]> {
+    const result = await this.client.query<DeweyCategoryRecord>("SELECT * FROM dewey_category ORDER BY decimal;");
+    return result.rows.map(record => this.deserialize(record));
+  }
+
   public async findHierarchy(decimal: string): Promise<DeweyCategory[]> {
     if (!decimal) return [];
 

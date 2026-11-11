@@ -17,6 +17,18 @@ export class LanguageRepositoryPostgresImpl implements LanguageRepository {
     else return this.deserialize(result.rows[0]);
   }
 
+  public async findByName(name: string): Promise<Language | null> {
+    const result = await this.client.query("SELECT * FROM language WHERE LOWER(name) = LOWER($1) LIMIT 1;", [name]);
+
+    if (result.rows.length == 0) return null;
+    else return this.deserialize(result.rows[0]);
+  }
+
+  public async findAll(): Promise<Language[]> {
+    const result = await this.client.query<LanguageRecord>("SELECT * FROM language ORDER BY name;");
+    return result.rows.map(record => this.deserialize(record));
+  }
+
   public async save(language: Language): Promise<void> {
     const result = await this.client.query("SELECT * FROM language WHERE iso_code = $1;", [language.isoCode]);
     const recordExists = result.rows.length > 0;

@@ -8,6 +8,10 @@ export class CategoryRepositoryInMemoryImpl implements CategoryRepository {
     return this.categories.get(id) || null;
   }
 
+  public async findAll(): Promise<DeweyCategory[]> {
+    return [...this.categories.values()].sort((a, b) => a.decimal.localeCompare(b.decimal));
+  }
+
   public async findHierarchy(decimal: string): Promise<DeweyCategory[]> {
     return this.categories.values().toArray()
       .filter(c => c.decimal == decimal)

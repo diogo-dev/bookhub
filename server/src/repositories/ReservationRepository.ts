@@ -1,4 +1,5 @@
 import { Reservation } from "@/domain/Reservation";
+import { ReservationBookDTO } from "@/dto/ReservationBookDTO";
 
 export interface ReservationRepository {
     save(reservation: Reservation): Promise<Reservation>;
@@ -8,4 +9,5 @@ export interface ReservationRepository {
     findByItemId(itemId: string): Promise<Reservation[]>;
     remove(reservation: Reservation): Promise<void>;
     listAll(): Promise<Reservation[]>;
+    findReservationListByUser(userId: string): Promise<ReservationBookDTO[]>;
 }

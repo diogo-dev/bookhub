@@ -18,6 +18,12 @@ export class ProfileService {
         return user;
     }
 
+    async getProfileByCpf(cpf: string): Promise<UserAccount> {
+        const user = await this.usersRepository.findByCpf(cpf);
+        if (!user) throw new HttpError(404, 'user not found');
+        return user;
+    }
+
     async updateProfile(userId: string, data: UpdateProfileData): Promise<UserAccount> {
 
         const updateData: {name?: string, email?: string, password_hash?: string} = {};

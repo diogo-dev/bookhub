@@ -19,9 +19,14 @@ export class PublisherRepositoryPostgresImpl implements PublisherRepository {
     else return this.deserialize(result.rows[0]);
   }
 
+  public async findAll(): Promise<Publisher[]> {
+    const result = await this.client.query<PublisherRecord>("SELECT * FROM publisher ORDER BY display_name;");
+    return result.rows.map(record => this.deserialize(record));
+  }
+
   public async save(publisher: Publisher): Promise<void> {
     await this.client.query(
-      "INSERT INTO publisher (name, display_name, created_at) VALUES ($1, $2, $3, $4);",
+      "INSERT INTO publisher (name, display_name, created_at) VALUES ($1, $2, $3);",
       [publisher.name, publisher.displayName, publisher.createdAt]
     );
   }

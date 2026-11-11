@@ -8,6 +8,15 @@ export class AuthorRepositoryInMemoryImpl implements AuthorRepository {
     return this.authors.get(id) || null;
   }
 
+  public async findByName(name: string): Promise<Author | null> {
+    const lower = name.toLowerCase();
+    return [...this.authors.values()].find(a => a.name.toLowerCase() == lower) || null;
+  }
+
+  public async findAll(): Promise<Author[]> {
+    return [...this.authors.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   public async save(author: Author): Promise<void> {
     this.authors.set(author.ID, author);
   }

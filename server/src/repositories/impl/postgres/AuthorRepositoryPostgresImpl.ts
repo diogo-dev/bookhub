@@ -21,6 +21,18 @@ export class AuthorRepositoryPostgresImpl implements AuthorRepository {
     else return this.deserialize(result.rows[0]);
   }
 
+  public async findByName(name: string): Promise<Author | null> {
+    const result = await this.client.query("SELECT * FROM author WHERE LOWER(name) = LOWER($1) LIMIT 1;", [name]);
+
+    if (result.rows.length == 0) return null;
+    else return this.deserialize(result.rows[0]);
+  }
+
+  public async findAll(): Promise<Author[]> {
+    const result = await this.client.query<AuthorRecord>("SELECT * FROM author ORDER BY name;");
+    return result.rows.map(record => this.deserialize(record));
+  }
+
   public async save(author: Author): Promise<void> {
     const result = await this.client.query("SELECT * FROM author WHERE id = $1;", [author.ID]);
     const recordExists = result.rows.length > 0;
