@@ -7,6 +7,7 @@ import { RegisterCredentials } from "@/dto/RegisterCredentials";
 import { RegisterResponse } from "@/dto/RegisterResponse";
 import { LoginCredentials } from "@/dto/LoginCredentials";
 import { LoginResponse } from "@/dto/LoginResponse";
+import { HttpError } from "@/errors/HttpError";
 
 
 export class AuthService {
@@ -15,11 +16,11 @@ export class AuthService {
     async login({ email, password }: LoginCredentials): Promise<LoginResponse> {
         // 1. Buscar usuário pelo email
         const user = await this.usersRepository.findByEmail(email);
-        if (!user) throw new Error("Senha ou email inválidos");
+        if (!user) throw new HttpError(401, "Senha ou email inválidos");
 
         // 2. Verificar senha
         const passwordMatches = await bcrypt.compare(password, user.password_hash);
-        if (!passwordMatches) throw new Error("Senha ou email inválidos");
+        if (!passwordMatches) throw new HttpError(401, "Senha ou email inválidos");
 
         // 3. Gerar token JWT
         const token = generateToken({
@@ -45,7 +46,7 @@ export class AuthService {
         // 1 Verificar se o usuário já existe
         const existingUser = await this.usersRepository.findByEmail(email);
         if (existingUser) {
-            throw new Error("Usuário já existe no banco de dados!");
+            throw new HttpError(400, "Usuário já existe no banco de dados!");
         }
 
         // 2 faz o Hash da senha
@@ -56,7 +57,7 @@ export class AuthService {
         const role = await this.roleRepository.getRoleByName(roleToAssign);
 
         if (!role) {
-            throw new Error(`Role '${roleToAssign}' não encontrada no banco de dados.`);
+            throw new HttpError(400, `Role '${roleToAssign}' não encontrada no banco de dados.`);
         }
 
         // 4. Criar novo usuário

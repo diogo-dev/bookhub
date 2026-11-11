@@ -22,103 +22,40 @@ import { Role } from "./domain/Role";
 import { AccountRepositoryPostgresImpl } from "./repositories/impl/postgres/AccountRepositoryPostgresImpl";
 import { AuthorRepositoryPostgresImpl } from "./repositories/impl/postgres/AuthorRepositoryPostgresImpl";
 import { PublisherRepositoryPostgresImpl } from "./repositories/impl/postgres/PublisherRepositoryPostgresImpl";
-import { BookRepositoryPostgresImpl } from "./repositories/impl/postgres/BookRepositoryPostgresImpl";
-import { ItemRepositoryPostgresImpl } from "./repositories/impl/postgres/ItemRepositoryPostgresImpl";
 import { CategoryRepositoryPostgresImpl } from "./repositories/impl/postgres/CategoryRepositoryPostgresImpl";
 import { LanguageRepositoryPostgresImpl } from "./repositories/impl/postgres/LanguageRepositoryPostgresImpl";
 import { PermissionRepositoryPostgresImpl } from "./repositories/impl/postgres/PermissionRepositoryPostgresImpl";
-import { RoleRepositoryPostgresImpl } from "./repositories/impl/postgres/RoleRepositoryPostgresImpl";
-import { UsersRepositoryPosgresImpl } from "./repositories/impl/postgres/UsersRepositoryPosgresImpl";
-import { InterestRepositoryPostgresImpl } from "./repositories/impl/postgres/InterestRepositoryPostgresImpl";
-import { InterestService } from "./services/InterestService";
-import { LoanService } from "./services/LoanService";
-import { LoanRepositoryPostgresImpl } from "./repositories/impl/postgres/LoanRepositoryPostgresImpl";
-import { ReservationRepositoryPostgresImpl } from "./repositories/impl/postgres/ReservationRepositoryPostgresImpl";
 
 import { AuthRequest } from "./dto/AuthRequest";
 
-import { AuthService } from "./auth/auth.service";
-import { ProfileService } from "./services/ProfileService";
 import { authenticateJWT, authorizeRoles } from "./auth/middleware";
 import { env } from './config/env';
+import { HttpError } from './errors/HttpError';
+import {
+  usersRepository,
+  roleRepository,
+  bookRepository,
+  itemRepository,
+  loanRepository,
+  reservationRepository,
+  authService,
+  loanService,
+} from './container';
+import routes from './routes';
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.get("/", (request: Request, response: Response) => {
-  response.json({ message: "root endpoint" });
-});
+app.use(routes);
 
 const accountRepository = new AccountRepositoryPostgresImpl(client);
 const authorRepository = new AuthorRepositoryPostgresImpl(client);
 const publisherRepository = new PublisherRepositoryPostgresImpl(client);
-const bookRepository = new BookRepositoryPostgresImpl(client);
-const itemRepository = new ItemRepositoryPostgresImpl(client);
 const categoryRepository = new CategoryRepositoryPostgresImpl(client);
 const languageRepository = new LanguageRepositoryPostgresImpl(client);
-const roleRepository = new RoleRepositoryPostgresImpl(client);
 const permissionRepository = new PermissionRepositoryPostgresImpl(client);
-const usersRepository = new UsersRepositoryPosgresImpl(client);
-const loanRepository = new LoanRepositoryPostgresImpl(client);
-const reservationRepository = new ReservationRepositoryPostgresImpl(client);
 
-const authService = new AuthService(usersRepository, roleRepository);
-const profileService = new ProfileService(usersRepository);
-const interestRepository = new InterestRepositoryPostgresImpl(client);
-const interestService = new InterestService(interestRepository, bookRepository);
-const loanService = new LoanService(loanRepository, reservationRepository, itemRepository, client);
-
-app.post("/auth/login", async (req: Request, res: Response) => {
-  try {
-    const schema = z.object({
-      email: z.string().email(),
-      password: z.string()
-    });
-    
-    const params = schema.parse(req.body);
-
-    const { email, password } = params;
-
-    const result = await authService.login({ email, password });
-
-    return res.status(200).json({
-      message: "Login realizado com sucesso!",
-      token: result.token,
-      user: result.user,
-    });
-  } catch (error: any) {
-    return res.status(401).json({ message: error.message || "Falha ao realizar login." });
-  }
-});
-
-app.post("/auth/register", async (req: Request, res: Response) => {
-  try {
-    const schema = z.object({
-      name: z.string().min(1),
-      email: z.string().email(),
-      cpf: z.string().min(11).max(14),
-      password: z.string(),
-      roleName: z.string().optional()
-    });
-
-    const params = schema.parse(req.body);
-
-    const { name, email, cpf, password, roleName } = params;
-
-    const result = await authService.register({ name, email, cpf, password, roleName });
-
-    return res.status(201).json({
-      message: "Usuário registrado com sucesso!",
-      token: result.token,
-      user: result.user,
-    });
-  } catch (error: any) {
-    return res.status(400).json({ 
-      message: error.message || "Erro ao registrar usuário." 
-    });
-  }
-});
 
 app.get("/reservations/users/:cpf", authenticateJWT, async (req: Request, res: Response) => {
   try {
@@ -197,66 +134,6 @@ app.get("/users/cpf/:cpf", async (request: Request, response: Response) => {
 
   response.json(user);
 })
-
-app.get('/me', authenticateJWT, async (req: AuthRequest, res: Response) => { 
-
-  try { 
-    const userId = req.user!.sub;
-    const user = await profileService.getProfile(userId);
-
-    return res.status(200).json({
-      id: user.ID,
-      name: user.name,
-      email: user.email,
-      cpf: user.cpf,
-      roles: user.roles.map(r => r.name),
-      createdAt: user.createdAt
-    });
-  } catch (error: any) {
-    return res.status(401).json({ message: error.message || "Falha ao buscar perfil do usuário." });
-  }
-});
-
-app.patch('/me', authenticateJWT, async (req: AuthRequest, res: Response) => { 
-  try { 
-    const schema = z.object({
-      name: z.string().optional(),
-      email: z.email().optional(),
-      password: z.string().optional()
-    });
-
-    const params = schema.parse(req.body);
-    const userId = req.user!.sub;
-
-    const updateUser = await profileService.updateProfile(userId, params);
-
-    return res.status(200).json({
-      id: updateUser.ID,
-      name: updateUser.name,
-      email: updateUser.email,
-      cpf: updateUser.cpf,
-      roles: updateUser.roles.map(r => r.name),
-      createdAt: updateUser.createdAt
-    });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Erro de validação", errors: error.issues });
-    }
-
-    return res.status(400).json({ message: error.message || "Falha ao atualizar perfil do usuário." });
-  }
-});
-
-app.delete('/me', authenticateJWT, async (req: AuthRequest, res: Response) => { 
-  try { 
-    const userId = req.user!.sub;
-    await profileService.deleteAccount(userId);
-
-    return res.status(200).json({ message: "Conta deletada com sucesso." });
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao deletar conta." });
-  }
-});
 
 app.get('/users', authenticateJWT, authorizeRoles('ADMIN', 'EMPLOYEE'), async (req: AuthRequest, res: Response) => {
   try {
@@ -400,72 +277,6 @@ app.delete('/users/:id', authenticateJWT, authorizeRoles('ADMIN'), async (req: A
       return res.status(400).json({ message: "Erro de validação", errors: error.issues });
     }
     return res.status(400).json({ message: error.message || "Falha ao deletar funcionário." });
-  }
-});
-
-app.get("/me/interests", authenticateJWT, async (req: AuthRequest, res: Response) => { 
-  try { 
-    const userId = req.user!.sub;
-    const interests = await interestService.getUserInterests(userId);
-    return res.status(200).json(interests);
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao buscar interesses do usuário." });
-  }
-});
-
-app.post("/me/interests", authenticateJWT, async (req: AuthRequest, res: Response) => { 
-  try { 
-    const schema = z.object({
-      bookISBN: z.string().max(13).regex(/^\d+$/)
-    });
-
-    const params = schema.parse(req.body);
-    const userId = req.user!.sub;
-
-    const interest = await interestService.addInterest(userId, params.bookISBN);
-
-    return res.status(201).json(interest);
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Erro de validação", errors: error.issues });
-    }
-    return res.status(400).json({ message: error.message || "Falha ao adicionar interesse." });
-  }
-});
-
-app.delete("/me/interests/:isbn", authenticateJWT, async (req: AuthRequest, res: Response) => { 
-  try { 
-    const schema = z.object({
-      isbn: z.string().max(13).regex(/^\d+$/)
-    });
-
-    const params = schema.parse(req.params);
-    const userId = req.user!.sub;
-
-    await interestService.removeInterest(userId, params.isbn);
-    return res.status(200).json({ message: "Interesse removido com sucesso." });
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao remover interesse." });
-  }
-});
-
-app.get("/me/loans", authenticateJWT, async(req: AuthRequest, res: Response) => { 
-  try { 
-    const userId = req.user!.sub;
-    const loans = await loanService.getUserLoansAndBookInfo(userId);
-    return res.status(200).json(loans);
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao buscar empréstimos do usuário." });
-  }
-});
-
-app.get("/me/reservations", authenticateJWT, async(req: AuthRequest, res: Response) => { 
-  try { 
-    const userId = req.user!.sub;
-    const reservations = await reservationRepository.findReservationListByUser(userId);
-    return res.status(200).json(reservations);
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao buscar reservas do usuário." });
   }
 });
 
@@ -1614,15 +1425,6 @@ app.delete("/books/:isbn", authenticateJWT, authorizeRoles('ADMIN', 'EMPLOYEE'),
 app.use((request: Request, response: Response) => {
   response.status(404).json({ message: "not found" });
 });
-
-class HttpError extends Error {
-  constructor(
-    public statusCode: number,
-    public message: string
-  ) {
-    super(message);
-  }
-}
 
 app.use("/", (error: Error, request: Request, response: Response, next: Function) => {
   let code = 500;

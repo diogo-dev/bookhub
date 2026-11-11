@@ -1,6 +1,7 @@
 import { InterestItem } from "@/domain/InterestItem";
 import { BookRepository } from "@/repositories/BookRepository";
 import { InterestItemRepository } from "@/repositories/InterestItemRepository";
+import { HttpError } from "@/errors/HttpError";
 
 export class InterestService {
     constructor(private interestRepository: InterestItemRepository, private bookRepository: BookRepository) {}
@@ -8,12 +9,12 @@ export class InterestService {
     async addInterest(userID: string, bookISBN: string): Promise<InterestItem> {
 
         const book = await this.bookRepository.find(bookISBN);
-        if (!book) throw new Error("Livro não encontrado");
+        if (!book) throw new HttpError(404, "Livro não encontrado");
 
         const existing = await this.interestRepository.findByUserAndBookISBN(userID, bookISBN);
 
         if (existing) { 
-            throw new Error("Livro já está na lista de interesses");
+            throw new HttpError(400, "Livro já está na lista de interesses");
         }
 
         const interest = new InterestItem(userID, bookISBN, Date.now());
@@ -22,7 +23,7 @@ export class InterestService {
 
     async removeInterest(userID: string, bookISBN: string): Promise<void> {
         const existing = await this.interestRepository.findByUserAndBookISBN(userID, bookISBN);
-        if (!existing) throw new Error("Livro não está na lista de interesses");
+        if (!existing) throw new HttpError(404, "Livro não está na lista de interesses");
         await this.interestRepository.remove(userID, bookISBN);
     }
 

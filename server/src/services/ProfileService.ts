@@ -1,6 +1,7 @@
 import { UserAccount } from "@/domain/UserAccount";
 import { UsersRepository } from "@/repositories/UsersRepository";
 import bcrypt from 'bcrypt';
+import { HttpError } from "@/errors/HttpError";
 
 export interface UpdateProfileData { 
     name?: string;
@@ -13,7 +14,7 @@ export class ProfileService {
 
     async getProfile(userId: string): Promise<UserAccount> {
         const user = await this.usersRepository.findById(userId);
-        if (!user) throw new Error('User not found');
+        if (!user) throw new HttpError(404, 'User not found');
         return user;
     }
 
@@ -35,7 +36,7 @@ export class ProfileService {
         const user = await this.usersRepository.findById(userId);
 
         if(!user) { 
-            throw new Error('User not found');
+            throw new HttpError(404, 'User not found');
         }
 
         await this.usersRepository.deleteById(userId);
