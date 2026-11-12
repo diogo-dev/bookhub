@@ -5,7 +5,14 @@ import { Publisher } from "@/domain/Publisher";
 import { Language } from "@/domain/Language";
 import { DeweyCategory } from "@/domain/DeweyCategory";
 import { Genre } from "@/domain/Genre";
-import { BookRepository } from "@/repositories/BookRepository";
+import {
+  BookRepository,
+  BookStats,
+  BookSummary,
+  ListBooksByGenreOptions,
+  ListBooksOptions,
+  PaginatedResult,
+} from "@/repositories/BookRepository";
 import { AuthorRecord } from "@/repositories/impl/postgres/AuthorRepositoryPostgresImpl";
 import { PublisherRecord } from "@/repositories/impl/postgres/PublisherRepositoryPostgresImpl";
 import { DeweyCategoryRecord } from "@/repositories/impl/postgres/CategoryRepositoryPostgresImpl";
@@ -622,6 +629,127 @@ export class BookRepositoryPostgresImpl implements BookRepository {
     }
 
     return book;
+  }
+
+  public async getStats(): Promise<BookStats> {
+    const [books, genres, authors, items] = await Promise.all([
+      this.client.query("SELECT COUNT(DISTINCT isbn) AS total FROM book;"),
+      this.client.query("SELECT COUNT(DISTINCT genre) AS total FROM book_genre;"),
+      this.client.query("SELECT COUNT(DISTINCT author_id) AS total FROM book_author;"),
+      this.client.query("SELECT COUNT(*) AS total FROM book_item WHERE status = 'disponivel';"),
+    ]);
+
+    return {
+      totalBooks: parseInt(books.rows[0].total),
+      totalGenres: parseInt(genres.rows[0].total),
+      totalAuthors: parseInt(authors.rows[0].total),
+      availableItems: parseInt(items.rows[0].total),
+    };
+  }
+
+  public async listPaginated({ limit, offset, letter }: ListBooksOptions): Promise<PaginatedResult<BookSummary>> {
+    const whereClause = letter ? "WHERE UPPER(SUBSTRING(b.title, 1, 1)) = UPPER($1)" : "";
+    const filterParams = letter ? [letter] : [];
+    const p = filterParams.length;
+
+    const countResult = await this.client.query(
+      `SELECT COUNT(DISTINCT b.isbn) AS total FROM book b ${whereClause};`,
+      filterParams
+    );
+
+    const dataResult = await this.client.query(`
+      SELECT DISTINCT b.isbn, b.title, b.subtitle, b.cover, b.number_of_pages, b.number_of_visits
+      FROM book b
+      ${whereClause}
+      ORDER BY b.title
+      LIMIT $${p + 1} OFFSET $${p + 2};`,
+      [...filterParams, limit, offset]
+    );
+
+    return {
+      items: await this.toSummaries(dataResult.rows),
+      total: parseInt(countResult.rows[0].total),
+    };
+  }
+
+  public async listByGenre(options: ListBooksByGenreOptions): Promise<PaginatedResult<BookSummary>> {
+    const { genre, limit, offset, sortBy, sortOrder, yearFrom, yearTo } = options;
+
+    const conditions: string[] = ["bg.genre LIKE $1"];
+    const params: any[] = [`%${genre}%`];
+
+    if (yearFrom) {
+      params.push(new Date(yearFrom, 0, 1).getTime() / 1000);
+      conditions.push(`b.published_at >= $${params.length}`);
+    }
+
+    if (yearTo) {
+      params.push(new Date(yearTo, 11, 31, 23, 59, 59).getTime() / 1000);
+      conditions.push(`b.published_at <= $${params.length}`);
+    }
+
+    const whereClause = conditions.join(" AND ");
+    const direction = sortOrder === "asc" ? "ASC" : "DESC";
+    const orderColumns: Record<ListBooksByGenreOptions["sortBy"], string> = {
+      title: `b.title ${direction}`,
+      date: `b.published_at ${direction}`,
+      pages: `b.number_of_pages ${direction}`,
+      popularity: `b.number_of_visits ${direction}, b.title ASC`,
+    };
+
+    const countResult = await this.client.query(`
+      SELECT COUNT(DISTINCT b.isbn) AS total
+      FROM book b
+      JOIN book_genre bg ON b.isbn = bg.book_isbn
+      WHERE ${whereClause};`,
+      params
+    );
+
+    const dataResult = await this.client.query(`
+      SELECT DISTINCT b.isbn, b.title, b.subtitle, b.cover, b.number_of_pages, b.number_of_visits, b.published_at
+      FROM book b
+      JOIN book_genre bg ON b.isbn = bg.book_isbn
+      WHERE ${whereClause}
+      ORDER BY ${orderColumns[sortBy]}
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2};`,
+      [...params, limit, offset]
+    );
+
+    return {
+      items: await this.toSummaries(dataResult.rows),
+      total: parseInt(countResult.rows[0].total),
+    };
+  }
+
+  // Busca os autores de todos os livros em uma única query (evita N+1)
+  private async toSummaries(rows: any[]): Promise<BookSummary[]> {
+    const isbns: string[] = rows.map(row => row.isbn);
+    const authorsByIsbn = new Map<string, { ID: string; name: string }[]>(isbns.map(isbn => [isbn, []]));
+
+    if (isbns.length > 0) {
+      const authorsResult = await this.client.query(`
+        SELECT ba.book_isbn, a.id, a.name
+        FROM book_author ba
+        JOIN author a ON ba.author_id = a.id
+        WHERE ba.book_isbn = ANY($1);`,
+        [isbns]
+      );
+
+      for (const row of authorsResult.rows) {
+        authorsByIsbn.get(row.book_isbn)?.push({ ID: row.id, name: row.name });
+      }
+    }
+
+    return rows.map(row => ({
+      ISBN: row.isbn,
+      title: row.title,
+      subtitle: row.subtitle,
+      cover: row.cover,
+      authors: authorsByIsbn.get(row.isbn) ?? [],
+      numberOfPages: row.number_of_pages,
+      numberOfVisits: row.number_of_visits,
+      publishedAt: row.published_at != null ? Number(row.published_at) : null,
+    }));
   }
 
   public async delete(isbn: string): Promise<void> {
