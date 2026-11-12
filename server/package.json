@@ -14,6 +14,7 @@
     "make-all-books-available": "ts-node -r tsconfig-paths/register src/scripts/make_all_books_available.ts",
     "check-books-items": "ts-node -r tsconfig-paths/register src/scripts/check_books_with_items.ts",
     "add-items-to-books": "ts-node -r tsconfig-paths/register src/scripts/add_items_to_books_without_items.ts",
+    "enrich-books": "ts-node -r tsconfig-paths/register src/scripts/enrich_books.ts",
     "jwt-key": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
   },
   "devDependencies": {
@@ -29,6 +30,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
