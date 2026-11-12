@@ -3,7 +3,7 @@ import { Router } from "express";
 import authRoutes from "./auth.routes";
 import accountRoutes from "./accounts.routes";
 import meRoutes from "./me.routes";
-// import userRoutes from "./users.routes";
+import userRoutes from "./user.routes";
 import loanRoutes from "./loans.routes";
 import reservationRoutes from "./reservations.routes";
 // import bookRoutes from "./books.routes";
@@ -23,7 +23,7 @@ routes.get("/", (req, res) => {
 routes.use("/auth", authRoutes);
 routes.use("/accounts", accountRoutes);
 routes.use("/me", meRoutes);
-// routes.use("/users", userRoutes);
+routes.use("/users", userRoutes);
 routes.use("/loans", loanRoutes);
 routes.use("/reservations", reservationRoutes);
 // routes.use("/books", bookRoutes);

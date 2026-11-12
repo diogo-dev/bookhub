@@ -26,6 +26,7 @@ import { PublisherService } from "@/services/PublisherService";
 import { CategoryService } from "@/services/CategoryService";
 import { AccountService } from "@/services/AccountService";
 import { ReservationService } from "@/services/ReservationService";
+import { UserService } from "@/services/UserService";
 
 import { AuthController } from "@/controllers/authController";
 import { MeController } from "@/controllers/meController";
@@ -38,6 +39,7 @@ import { CategoryController } from "@/controllers/categoryController";
 import { AccountController } from "@/controllers/accountController";
 import { ReservationController } from "@/controllers/reservationController";
 import { LoanController } from "@/controllers/loanController";
+import { UserController } from "@/controllers/userController";
 
 // Repositories
 export const usersRepository = new UsersRepositoryPosgresImpl(client);
@@ -67,6 +69,7 @@ export const publisherService = new PublisherService(publisherRepository);
 export const categoryService = new CategoryService(categoryRepository);
 export const accountService = new AccountService(accountRepository);
 export const reservationService = new ReservationService(reservationRepository, itemRepository, client);
+export const userService = new UserService(usersRepository, authService);
 
 // Controllers
 export const authController = new AuthController(authService);
@@ -80,3 +83,4 @@ export const categoryController = new CategoryController(categoryService);
 export const accountController = new AccountController(accountService);
 export const reservationController = new ReservationController(reservationService, profileService);
 export const loanController = new LoanController(loanService, profileService);
+export const userController = new UserController(userService, loanService, reservationService);

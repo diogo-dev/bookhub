@@ -5,7 +5,6 @@ import z from "zod";
 import cors from "cors";
 import https from "https";
 import express, { Request, Response } from "express";
-import bcrypt from "bcrypt";
 import { client } from "./infra/pg/connection";
 import "./scripts/refresh_catalog";
 
@@ -17,22 +16,16 @@ import { DeweyCategory } from "./domain/DeweyCategory";
 import { Language } from "./domain/Language";
 
 
-import { AuthRequest } from "./dto/AuthRequest";
-
 import { authenticateJWT, authorizeRoles } from "./auth/middleware";
 import { env } from './config/env';
 import { HttpError } from './errors/HttpError';
 import {
-  usersRepository,
   bookRepository,
   itemRepository,
-  reservationRepository,
   authorRepository,
   publisherRepository,
   categoryRepository,
   languageRepository,
-  authService,
-  loanService,
 } from './container';
 import routes from './routes';
 import { bcp47Pattern } from './schemas/languageSchemas';
@@ -43,208 +36,6 @@ app.use(cors());
 
 app.use(routes);
 
-
-
-app.get("/users/id/:id", async (request: Request, response: Response) => {
- const schema = z.object({
-    id: z.uuid()
-  });
-
-  const params = schema.parse(request.params);
-
-  const user = await usersRepository.findById(params.id);
-
-  if (!user) throw new HttpError(404, "user not found");
-
-  response.json(user);
-})
-
-app.get("/users/cpf/:cpf", async (request: Request, response: Response) => {
- const schema = z.object({
-    cpf: z.string().min(11).max(14)
-  });
-
-  const params = schema.parse(request.params);
-
-  const user = await usersRepository.findByCpf(params.cpf);
-
-  if (!user) throw new HttpError(404, "user not found");
-
-  response.json(user);
-})
-
-app.get('/users', authenticateJWT, authorizeRoles('ADMIN', 'EMPLOYEE'), async (req: AuthRequest, res: Response) => {
-  try {
-    const users = await usersRepository.findAll();
-    
-    return res.status(200).json(users.map(user => ({
-      id: user.ID,
-      name: user.name,
-      email: user.email,
-      cpf: user.cpf,
-      roles: user.roles.map(r => r.name),
-      createdAt: user.createdAt
-    })));
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao listar usuários." });
-  }
-});
-
-app.post('/users', authenticateJWT, authorizeRoles('ADMIN'), async (req: AuthRequest, res: Response) => {
-  try {
-    const schema = z.object({
-      name: z.string().min(1),
-      email: z.string().email(),
-      cpf: z.string().min(11).max(14),
-      password: z.string().min(6),
-      roleName: z.string().optional()
-    });
-
-    const params = schema.parse(req.body);
-    
-    const existingUser = await usersRepository.findByEmail(params.email);
-    if (existingUser) {
-      return res.status(400).json({ message: "Email já está em uso." });
-    }
-
-    const existingCpf = await usersRepository.findByCpf(params.cpf);
-    if (existingCpf) {
-      return res.status(400).json({ message: "CPF já está em uso." });
-    }
-
-    const result = await authService.register({
-      name: params.name,
-      email: params.email,
-      cpf: params.cpf,
-      password: params.password,
-      roleName: params.roleName || 'EMPLOYEE'
-    });
-
-    return res.status(201).json({
-      id: result.user.id,
-      name: result.user.name,
-      email: result.user.email,
-      cpf: result.user.cpf,
-      roles: result.user.roles.map((r: any) => typeof r === 'string' ? r : r.name)
-    });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Erro de validação", errors: error.issues });
-    }
-    return res.status(400).json({ message: error.message || "Falha ao criar funcionário." });
-  }
-});
-
-app.patch('/users/:id', authenticateJWT, authorizeRoles('ADMIN'), async (req: AuthRequest, res: Response) => {
-  try {
-    const schema = z.object({
-      id: z.uuid()
-    });
-
-    const params = schema.parse(req.params);
-    const updateSchema = z.object({
-      name: z.string().optional(),
-      email: z.string().email().optional(),
-      password: z.string().optional(),
-      roleNames: z.array(z.string()).optional()
-    });
-
-    const updateData = updateSchema.parse(req.body);
-    const userId = params.id;
-
-    const existingUser = await usersRepository.findById(userId);
-    if (!existingUser) {
-      return res.status(404).json({ message: "Usuário não encontrado." });
-    }
-
-    if (updateData.name || updateData.email || updateData.password) {
-      const profileData: any = {};
-      if (updateData.name) profileData.name = updateData.name;
-      if (updateData.email) profileData.email = updateData.email;
-      if (updateData.password) {
-        const passwordHash = await bcrypt.hash(updateData.password, 10);
-        profileData.password_hash = passwordHash;
-      }
-      
-      await usersRepository.updateProfile(userId, profileData);
-    }
-
-    if (updateData.roleNames) {
-      await usersRepository.updateRoles(userId, updateData.roleNames);
-    }
-
-    const updatedUser = await usersRepository.findById(userId);
-    if (!updatedUser) {
-      return res.status(404).json({ message: "Erro ao buscar usuário atualizado." });
-    }
-
-    return res.status(200).json({
-      id: updatedUser.ID,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      cpf: updatedUser.cpf,
-      roles: updatedUser.roles.map(r => r.name),
-      createdAt: updatedUser.createdAt
-    });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Erro de validação", errors: error.issues });
-    }
-    return res.status(400).json({ message: error.message || "Falha ao atualizar funcionário." });
-  }
-});
-
-app.delete('/users/:id', authenticateJWT, authorizeRoles('ADMIN'), async (req: AuthRequest, res: Response) => {
-  try {
-    const schema = z.object({
-      id: z.uuid()
-    });
-
-    const params = schema.parse(req.params);
-    const userId = params.id;
-
-    if (userId === req.user!.sub) {
-      return res.status(400).json({ message: "Você não pode deletar sua própria conta." });
-    }
-
-    await usersRepository.deleteById(userId);
-
-    return res.status(200).json({ message: "Funcionário deletado com sucesso." });
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Erro de validação", errors: error.issues });
-    }
-    return res.status(400).json({ message: error.message || "Falha ao deletar funcionário." });
-  }
-});
-
-app.get("/users/:id/loans", authenticateJWT, authorizeRoles('ADMIN', 'EMPLOYEE'), async (req: AuthRequest, res: Response) => {
-  try {
-    const schema = z.object({
-      id: z.uuid()
-    });
-
-    const params = schema.parse(req.params);
-    const loans = await loanService.getUserLoansAndBookInfo(params.id);
-    return res.status(200).json(loans);
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao buscar empréstimos do usuário." });
-  }
-});
-
-app.get("/users/:id/reservations", authenticateJWT, authorizeRoles('ADMIN', 'EMPLOYEE'), async (req: AuthRequest, res: Response) => {
-  try {
-    const schema = z.object({
-      id: z.uuid()
-    });
-
-    const params = schema.parse(req.params);
-    const reservations = await reservationRepository.findReservationListByUser(params.id);
-    return res.status(200).json(reservations);
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message || "Falha ao buscar reservas do usuário." });
-  }
-});
 
 
 app.get("/books/stats", async (request: Request, response: Response) => {
